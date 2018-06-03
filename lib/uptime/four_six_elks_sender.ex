@@ -25,8 +25,8 @@ defmodule Uptime.FourSixElksSender do
            body: Message.post_data(msg),
            ibrowse: [
              basic_auth:
-               {Application.get_env(:uptime, :elks_username),
-                Application.get_env(:uptime, :elks_key)}
+               {to_charlist(Application.get_env(:uptime, :elks_username)),
+                to_charlist(Application.get_env(:uptime, :elks_key))}
            ]
          ) do
       r = %HTTPotion.Response{status_code: 202} ->

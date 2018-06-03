@@ -13,7 +13,7 @@ defmodule FourSixElksSenderTest do
                HTTPotion.post(
                  "https://api.46elks.com/a1/SMS",
                  body: Message.post_data(m),
-                 ibrowse: [basic_auth: {"testuser", "secret"}]
+                 ibrowse: [basic_auth: {'testuser', 'secret'}]
                )
              )
     end
