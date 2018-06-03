@@ -5,7 +5,8 @@ defmodule Uptime.Application do
 
   def start(_type, _args) do
     children = [
-      {Uptime.FourSixElksSender, nil}
+      {Uptime.FourSixElksSender, []},
+      {Uptime.Checkers, []}
     ]
 
     opts = [strategy: :one_for_one, name: Uptime.Supervisor]
