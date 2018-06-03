@@ -1,18 +1,8 @@
 defmodule Uptime do
-  @moduledoc """
-  Documentation for Uptime.
-  """
+  alias Uptime.{Checkers, Check}
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Uptime.hello
-      :world
-
-  """
-  def hello do
-    :world
+  def run(url, notify_number) do
+    check = %Check{url: url, notify_number: notify_number}
+    Checkers.add_check(check)
   end
 end
