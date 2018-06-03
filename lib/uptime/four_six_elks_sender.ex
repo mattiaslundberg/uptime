@@ -20,7 +20,15 @@ defmodule Uptime.FourSixElksSender do
   end
 
   def handle_cast(msg = %Message{}, _) do
-    case HTTPotion.post(@endpoint, body: Message.post_data(msg), ibrowse: []) do
+    case HTTPotion.post(
+           @endpoint,
+           body: Message.post_data(msg),
+           ibrowse: [
+             basic_auth:
+               {Application.get_env(:uptime, :elks_username),
+                Application.get_env(:uptime, :elks_key)}
+           ]
+         ) do
       r = %HTTPotion.Response{status_code: 202} ->
         IO.inspect(r)
         {:noreply, {}}
