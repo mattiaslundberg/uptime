@@ -23,7 +23,7 @@ defmodule Uptime.DummySender do
     {:ok, []}
   end
 
-  def handle_cast(:reset, state) do
+  def handle_cast(:reset, _state) do
     {:noreply, []}
   end
 
