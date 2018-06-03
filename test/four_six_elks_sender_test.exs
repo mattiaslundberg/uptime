@@ -17,6 +17,7 @@ defmodule FourSixElksSenderTest do
       capture_log(fn ->
         m = %Message{to: "me", msg: "Warning"}
         FourSixElksSender.send_message(m)
+        :timer.sleep(5)
       end)
     end
   end
