@@ -26,4 +26,17 @@ defmodule CheckerTest do
       assert called(Check.maybe_send_notification(check))
     end
   end
+
+  test "updates state after check" do
+    with_mocks([
+      {Check, [], [perform_check: fn c -> %{c | failed_checks: c.failed_checks + 1} end]},
+      {Check, [], [maybe_send_notification: fn c -> c end]}
+    ]) do
+      check = %Check{}
+      {:noreply, check} = Checker.handle_info(:do_check, check)
+      {:noreply, check} = Checker.handle_info(:do_check, check)
+
+      assert check.failed_checks == 2
+    end
+  end
 end

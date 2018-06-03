@@ -19,9 +19,10 @@ defmodule Uptime.Checker do
   end
 
   def handle_info(:do_check, check = %Check{}) do
-    check
-    |> Check.perform_check()
-    |> Check.maybe_send_notification()
+    check =
+      check
+      |> Check.perform_check()
+      |> Check.maybe_send_notification()
 
     schedule()
     {:noreply, check}
