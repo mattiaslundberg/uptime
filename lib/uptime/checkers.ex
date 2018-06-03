@@ -21,7 +21,7 @@ defmodule Uptime.Checkers do
   end
 
   def handle_call({:add, check = %Check{}}, _from, state) do
-    {:ok, pid} = GenServer.start_link(Uptime.Checker, {check})
+    {:ok, pid} = GenServer.start_link(Uptime.Checker, check)
     new_check = %{check | pid: pid}
     {:reply, new_check, state}
   end

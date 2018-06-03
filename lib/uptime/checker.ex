@@ -8,10 +8,24 @@ defmodule Uptime.Checker do
   end
 
   def stop(pid) do
-    send(pid, :stop)
+    Process.exit(pid, :stopped)
   end
 
-  def init(_) do
-    {:ok, nil}
+  def init(check) do
+    schedule()
+    {:ok, check}
+  end
+
+  def handle_info(:do_check, check) do
+    check
+    |> Check.perform_check()
+    |> Check.maybe_send_notification()
+
+    schedule()
+    {:noreply, check}
+  end
+
+  defp schedule() do
+    Process.send_after(self(), :do_check, 6 * 60 * 1000)
   end
 end
