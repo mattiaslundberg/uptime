@@ -57,5 +57,18 @@ defmodule FourSixElksSenderTest do
                end) =~ "Failed to send"
       end
     end
+
+    test "non 200 response code" do
+      with_mock HTTPotion,
+        post: fn _url, _data ->
+          %HTTPotion.Response{status_code: 500, body: ""}
+        end do
+        m = %Message{to: "me", msg: "Warning"}
+
+        assert capture_log(fn ->
+                 {:noreply, _} = FourSixElksSender.handle_cast(m, nil)
+               end) =~ "Failed to send"
+      end
+    end
   end
 end
