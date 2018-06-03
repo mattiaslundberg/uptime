@@ -24,18 +24,32 @@ defmodule Uptime.FourSixElksSender do
   def handle_cast(msg = %Message{}, _) do
     msg
     |> do_post()
-    |> handle_response(msg)
+    |> parse_response(msg)
+    |> send_reply()
   end
 
-  defp handle_response(%HTTPotion.Response{status_code: 200}, _msg) do
+  defp send_reply(true) do
     Logger.info("Successfully sent message")
+
     {:noreply, {}}
   end
 
-  defp handle_response(response, msg) do
+  defp send_reply(_) do
     Logger.error("Failed to send message")
     {:noreply, {}}
   end
+
+  defp parse_response(%HTTPotion.Response{status_code: 200, body: body}, _msg) do
+    case Poison.decode(body) do
+      {:ok, parser} ->
+        parser["status"] == "created"
+
+      _ ->
+        false
+    end
+  end
+
+  defp parse_response(_response, _msg), do: false
 
   defp do_post(msg = %Message{}) do
     HTTPotion.post(
