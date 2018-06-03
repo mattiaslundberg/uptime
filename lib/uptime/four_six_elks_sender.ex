@@ -1,6 +1,8 @@
 defmodule Uptime.FourSixElksSender do
   use GenServer
 
+  require Logger
+
   alias Uptime.Message
 
   @endpoint "https://api.46elks.com/a1/SMS"
@@ -20,22 +22,35 @@ defmodule Uptime.FourSixElksSender do
   end
 
   def handle_cast(msg = %Message{}, _) do
-    case HTTPotion.post(
-           @endpoint,
-           body: Message.post_data(msg),
-           ibrowse: [
-             basic_auth:
-               {to_charlist(Application.get_env(:uptime, :elks_username)),
-                to_charlist(Application.get_env(:uptime, :elks_key))}
-           ]
-         ) do
-      r = %HTTPotion.Response{status_code: 202} ->
-        IO.inspect(r)
-        {:noreply, {}}
+    msg
+    |> do_post()
+    |> handle_response(msg)
+  end
 
-      error ->
-        IO.inspect(error)
-        {:noreply, {}}
-    end
+  defp handle_response(%HTTPotion.Response{status_code: 200}, _msg) do
+    Logger.info("Successfully sent message")
+    {:noreply, {}}
+  end
+
+  defp handle_response(response, msg) do
+    Logger.error("Failed to send message")
+    {:noreply, {}}
+  end
+
+  defp do_post(msg = %Message{}) do
+    HTTPotion.post(
+      @endpoint,
+      body: Message.post_data(msg),
+      ibrowse: get_auth()
+    )
+  end
+
+  defp get_auth() do
+    [
+      basic_auth: {
+        to_charlist(Application.get_env(:uptime, :elks_username)),
+        to_charlist(Application.get_env(:uptime, :elks_key))
+      }
+    ]
   end
 end
