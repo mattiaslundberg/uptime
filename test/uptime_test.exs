@@ -1,5 +1,5 @@
 defmodule UptimeTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
   doctest Uptime
 
   test "sends message" do

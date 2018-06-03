@@ -1,5 +1,5 @@
 defmodule MessageTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
   alias Uptime.Message
 
   describe "post_data" do

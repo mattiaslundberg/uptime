@@ -1,5 +1,5 @@
 defmodule CheckersTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   alias Uptime.{Checkers, Check}
 
