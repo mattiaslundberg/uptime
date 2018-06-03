@@ -3,7 +3,38 @@ defmodule CheckTest do
 
   alias Uptime.{Check, DummySender}
 
+  import Mock
+
   describe "perform_check/1" do
+    test_with_mock "perform successful check", HTTPotion,
+      get: fn _url -> %HTTPotion.Response{status_code: 200} end do
+      check =
+        %Check{url: "https://test.com"}
+        |> Check.perform_check()
+
+      assert check.failed_checks == 0
+      assert called(HTTPotion.get("https://test.com"))
+    end
+
+    test_with_mock "perform failing check", HTTPotion,
+      get: fn _url -> %HTTPotion.Response{status_code: 500} end do
+      check =
+        %Check{url: "https://test.com"}
+        |> Check.perform_check()
+
+      assert check.failed_checks == 1
+      assert called(HTTPotion.get("https://test.com"))
+    end
+
+    test_with_mock "successful check restores counters", HTTPotion,
+      get: fn _url -> %HTTPotion.Response{status_code: 200} end do
+      check =
+        %Check{url: "https://test.com", failed_checks: 4, alert_sent: true}
+        |> Check.perform_check()
+
+      assert check.failed_checks == 0
+      assert check.alert_sent == false
+    end
   end
 
   describe "maybe_send_notification/1" do

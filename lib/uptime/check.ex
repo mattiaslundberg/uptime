@@ -1,11 +1,21 @@
 defmodule Uptime.Check do
-  defstruct pid: nil, url: nil, failed_checks: 0, notify_number: nil, alert_sent: false
+  defstruct pid: nil,
+            url: nil,
+            failed_checks: 0,
+            notify_number: nil,
+            alert_sent: false,
+            expected_code: 200
 
   @required_fails 3
 
-  def perform_check(check = %__MODULE__{}) do
-    # FIXME: Implement
-    check
+  def perform_check(check = %__MODULE__{expected_code: expected_code}) do
+    case HTTPotion.get(check.url) do
+      %HTTPotion.Response{status_code: ^expected_code} ->
+        %{check | alert_sent: false, failed_checks: 0}
+
+      _ ->
+        %{check | failed_checks: check.failed_checks + 1}
+    end
   end
 
   def maybe_send_notification(check = %__MODULE__{}, sender \\ FourSixElksSender) do
