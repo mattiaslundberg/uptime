@@ -1,6 +1,8 @@
 defmodule Uptime.Checker do
   use GenServer
 
+  @check_interval Application.get_env(:uptime, :check_interval)
+
   alias Uptime.Check
 
   def start_link(check = %Check{}) do
@@ -16,7 +18,7 @@ defmodule Uptime.Checker do
     {:ok, check}
   end
 
-  def handle_info(:do_check, check) do
+  def handle_info(:do_check, check = %Check{}) do
     check
     |> Check.perform_check()
     |> Check.maybe_send_notification()
@@ -26,6 +28,6 @@ defmodule Uptime.Checker do
   end
 
   defp schedule() do
-    Process.send_after(self(), :do_check, 6 * 60 * 1000)
+    Process.send_after(self(), :do_check, @check_interval)
   end
 end
