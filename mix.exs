@@ -24,7 +24,8 @@ defmodule Uptime.MixProject do
   defp deps do
     [
       {:mix_test_watch, "~> 0.6", only: :dev, runtime: false},
-      {:httpotion, "~> 3.1.0"}
+      {:httpotion, "~> 3.1.0"},
+      {:mock, "~> 0.3.0", only: :test}
     ]
   end
 end
