@@ -21,10 +21,11 @@ defmodule Uptime.FourSixElksSender do
 
   def handle_cast(msg = %Message{}, _) do
     case HTTPotion.post(@endpoint, body: Message.post_data(msg), ibrowse: []) do
-      {:ok, _} ->
+      r = %HTTPotion.Response{status_code: 202} ->
+        IO.inspect(r)
         {:noreply, {}}
 
-      {:error, error} ->
+      error ->
         IO.inspect(error)
         {:noreply, {}}
     end
