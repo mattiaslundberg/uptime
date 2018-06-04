@@ -5,3 +5,17 @@
     <li><%= c.url %></li>
   <% end %>
 </ul>
+
+<%= form_for @changeset, page_path(@conn, :create), fn f -> %>
+
+  <%= label(f, :url, "Url") %>
+  <%= text_input(f, :url, required: true) %>
+
+  <%= label(f, :notify_number, "Notify this number") %>
+  <%= text_input(f, :notify_number, required: true) %>
+
+  <%= label(f, :expected_code, "Expected response code") %>
+  <%= select(f, :expected_code, 100..600) %>
+
+  <%= submit "Save" %>
+<% end %>
