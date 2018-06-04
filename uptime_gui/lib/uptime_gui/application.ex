@@ -8,12 +8,8 @@ defmodule UptimeGui.Application do
 
     # Define workers and child supervisors to be supervised
     children = [
-      # Start the Ecto repository
       supervisor(UptimeGui.Repo, []),
-      # Start the endpoint when the application starts
-      supervisor(UptimeGuiWeb.Endpoint, []),
-      # Start your own worker by calling: UptimeGui.Worker.start_link(arg1, arg2, arg3)
-      # worker(UptimeGui.Worker, [arg1, arg2, arg3]),
+      supervisor(UptimeGuiWeb.Endpoint, [])
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
