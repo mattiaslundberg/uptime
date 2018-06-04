@@ -1,1 +1,7 @@
-<div>TODO</div>
+<h1>Active checks</h1>
+
+<ul>
+  <%= for c <- @checks do %>
+    <li><%= c.url %></li>
+  <% end %>
+</ul>
