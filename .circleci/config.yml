@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - checkout
-      - run: cd uptime_gui && mix deps.get --force
+      - run: cd uptime_gui && mix local.hex --force && mix deps.get
       - run: uptime_gui && mix test
 
   test_backend:
@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - checkout
-      - run: cd backend && mix deps.get --force
+      - run: cd backend && mix local.hex --force && mix deps.get
       - run: cd backend && mix test
 
 workflows:
