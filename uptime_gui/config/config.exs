@@ -14,14 +14,17 @@ config :uptime_gui, UptimeGuiWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "HbPYFrZMy7wrjFXiYzQf89WzEmsjdbC8EiQEHc7oAzsbP/pmGz6PkR34Euei0zxH",
   render_errors: [view: UptimeGuiWeb.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: UptimeGui.PubSub,
-           adapter: Phoenix.PubSub.PG2]
+  pubsub: [name: UptimeGui.PubSub, adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:user_id]
 
+config :uptime_gui,
+  elks_username: System.get_env("ELKS_USER"),
+  elks_key: System.get_env("ELKS_KEY")
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"
