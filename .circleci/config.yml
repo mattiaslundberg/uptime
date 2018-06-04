@@ -1,0 +1,44 @@
+version: 2
+jobs:
+  clone:
+    docker:
+      - image: circleci/elixir:1.6
+    steps:
+      - checkout
+
+  test_gui:
+    docker:
+      - image: circleci/elixir:1.6
+      - image: circleci/postgres:10.1-alpine
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: uptime_gui_test
+          POSTGRES_PASSWORD: postgres
+
+    working_directory: ~/repo/uptime_gui
+
+    steps:
+      - run: mix deps.get
+      - run: mix test
+
+  test_backend:
+    docker:
+      - image: circleci/elixir:1.6
+
+    working_directory: ~/repo/uptime_gui
+
+    steps:
+      - run: mix deps.get
+      - run: mix test
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - clone
+      - test_gui:
+        requires:
+          - clone
+      - test_backend:
+        requires:
+          - clone
