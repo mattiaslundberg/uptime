@@ -1,5 +1,5 @@
 defmodule UptimeGuiWeb.PageControllerTest do
-  use UptimeGuiWeb.ConnCase
+  use UptimeGuiWeb.ConnCase, async: false
 
   alias UptimeGui.{Repo, Check}
 
