@@ -9,23 +9,23 @@ jobs:
           POSTGRES_DB: uptime_gui_test
           POSTGRES_PASSWORD: postgres
 
-    working_directory: ~/repo/uptime_gui
+    working_directory: ~/repo/
 
     steps:
       - checkout
-      - run: mix deps.get
-      - run: mix test
+      - run: cd uptime_gui && mix deps.get
+      - run: uptime_gui && mix test
 
   test_backend:
     docker:
       - image: circleci/elixir:1.6
 
-    working_directory: ~/repo/uptime_gui
+    working_directory: ~/repo/
 
     steps:
       - checkout
-      - run: mix deps.get
-      - run: mix test
+      - run: cd backend && mix deps.get
+      - run: cd backend && mix test
 
 workflows:
   version: 2
