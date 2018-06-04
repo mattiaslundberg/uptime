@@ -3,7 +3,7 @@ defmodule Uptime.FourSixElksSender do
 
   require Logger
 
-  alias Uptime.Message
+  alias Uptime.{Message, Check}
 
   @endpoint "https://api.46elks.com/a1/SMS"
 
@@ -11,8 +11,8 @@ defmodule Uptime.FourSixElksSender do
     GenServer.start_link(__MODULE__, state, name: __MODULE__)
   end
 
-  def send_message(msg = %Message{}) do
-    GenServer.cast(__MODULE__, msg)
+  def send_message(msg = %Message{}, check = %Check{}) do
+    GenServer.cast(__MODULE__, {msg, check})
   end
 
   # Callbacks
@@ -21,9 +21,9 @@ defmodule Uptime.FourSixElksSender do
     {:ok, nil}
   end
 
-  def handle_cast(msg = %Message{}, _) do
+  def handle_cast({msg = %Message{}, check = %Check{}}, _) do
     msg
-    |> do_post()
+    |> do_post(check)
     |> parse_response(msg)
     |> send_reply()
   end
@@ -51,20 +51,11 @@ defmodule Uptime.FourSixElksSender do
 
   defp parse_response(_response, _msg), do: false
 
-  defp do_post(msg = %Message{}) do
+  defp do_post(msg = %Message{}, check = %Check{}) do
     HTTPotion.post(
       @endpoint,
       body: Message.post_data(msg),
-      ibrowse: get_auth()
+      ibrowse: Check.get_auth(check)
     )
-  end
-
-  defp get_auth() do
-    [
-      basic_auth: {
-        to_charlist(Application.get_env(:uptime, :elks_username)),
-        to_charlist(Application.get_env(:uptime, :elks_key))
-      }
-    ]
   end
 end

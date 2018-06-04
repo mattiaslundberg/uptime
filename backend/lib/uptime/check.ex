@@ -1,6 +1,9 @@
 defmodule Uptime.Check do
   defstruct pid: nil,
             url: nil,
+            elks_username: nil,
+            elks_key: nil,
+            check_interval: 5 * 60 * 1000,
             failed_checks: 0,
             notify_number: nil,
             alert_sent: false,
@@ -25,6 +28,15 @@ defmodule Uptime.Check do
     else
       check
     end
+  end
+
+  def get_auth(check = %__MODULE__{}) do
+    [
+      basic_auth: {
+        to_charlist(check.elks_username),
+        to_charlist(check.elks_key)
+      }
+    ]
   end
 
   defp get_message(%__MODULE__{notify_number: to, url: url, failed_checks: fail_no}) do

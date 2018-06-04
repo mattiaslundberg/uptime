@@ -1,8 +1,7 @@
 defmodule FourSixElksSenderTest do
   use ExUnit.Case, async: false
 
-  alias Uptime.FourSixElksSender
-  alias Uptime.Message
+  alias Uptime.{Message, Check, FourSixElksSender}
 
   require Logger
 
@@ -16,7 +15,7 @@ defmodule FourSixElksSenderTest do
       end do
       capture_log(fn ->
         m = %Message{to: "me", msg: "Warning"}
-        FourSixElksSender.send_message(m)
+        FourSixElksSender.send_message(m, %Check{})
         :timer.sleep(5)
       end)
     end
@@ -28,9 +27,10 @@ defmodule FourSixElksSenderTest do
         %HTTPotion.Response{status_code: 200, body: "{\"status\": \"created\"}"}
       end do
       m = %Message{to: "me", msg: "Warning"}
+      c = %Check{elks_username: "user", elks_key: "secret"}
 
       assert capture_log(fn ->
-               {:noreply, _} = FourSixElksSender.handle_cast(m, nil)
+               {:noreply, _} = FourSixElksSender.handle_cast({m, c}, nil)
              end) =~ "Successfully sent message"
     end
 
@@ -39,9 +39,10 @@ defmodule FourSixElksSenderTest do
         %HTTPotion.Response{status_code: 200, body: "{\"status\": \"error\"}"}
       end do
       m = %Message{to: "me", msg: "Warning"}
+      c = %Check{elks_username: "user", elks_key: "secret"}
 
       assert capture_log(fn ->
-               {:noreply, _} = FourSixElksSender.handle_cast(m, nil)
+               {:noreply, _} = FourSixElksSender.handle_cast({m, c}, nil)
              end) =~ "Failed to send"
     end
 
@@ -50,9 +51,10 @@ defmodule FourSixElksSenderTest do
         %HTTPotion.Response{status_code: 500, body: ""}
       end do
       m = %Message{to: "me", msg: "Warning"}
+      c = %Check{elks_username: "user", elks_key: "secret"}
 
       assert capture_log(fn ->
-               {:noreply, _} = FourSixElksSender.handle_cast(m, nil)
+               {:noreply, _} = FourSixElksSender.handle_cast({m, c}, nil)
              end) =~ "Failed to send"
     end
   end
