@@ -15,7 +15,10 @@ defmodule UptimeGui.CheckTest do
       refute changeset.valid?
     end
 
-    test "refutest non valid url"
+    test "refutest non valid url" do
+      changeset = Check.changeset(%Check{}, Map.put(@valid_attrs, :url, "invalid"))
+      refute changeset.valid?
+    end
 
     test "refutes empty number" do
       changeset = Check.changeset(%Check{}, Map.put(@valid_attrs, :notify_number, ""))

@@ -18,6 +18,7 @@ defmodule UptimeGui.Check do
     struct
     |> cast(params, [:url, :notify_number, :expected_code])
     |> validate_required([:url, :notify_number, :expected_code])
+    |> validate_format(:url, ~r/https?\:\/\/.*/)
   end
 
   def get_all() do
