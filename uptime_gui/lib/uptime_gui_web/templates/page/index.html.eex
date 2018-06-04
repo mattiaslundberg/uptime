@@ -10,12 +10,15 @@
 
   <%= label(f, :url, "Url") %>
   <%= text_input(f, :url, required: true) %>
+  <%= error_tag(f, :url) %>
 
   <%= label(f, :notify_number, "Notify this number") %>
   <%= text_input(f, :notify_number, required: true) %>
+  <%= error_tag(f, :notify_number) %>
 
   <%= label(f, :expected_code, "Expected response code") %>
   <%= select(f, :expected_code, 100..600) %>
+  <%= error_tag(f, :expected_code) %>
 
   <%= submit "Save" %>
 <% end %>
