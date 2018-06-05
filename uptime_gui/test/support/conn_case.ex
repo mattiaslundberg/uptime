@@ -20,19 +20,20 @@ defmodule UptimeGuiWeb.ConnCase do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
       import UptimeGuiWeb.Router.Helpers
+      import UptimeGui.Factories
 
       # The default endpoint for testing
       @endpoint UptimeGuiWeb.Endpoint
     end
   end
 
-
   setup tags do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(UptimeGui.Repo)
+
     unless tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(UptimeGui.Repo, {:shared, self()})
     end
+
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
-
 end

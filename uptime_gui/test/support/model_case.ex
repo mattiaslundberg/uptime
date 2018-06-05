@@ -20,6 +20,7 @@ defmodule UptimeGui.ModelCase do
       import Ecto.Changeset
       import Ecto.Query
       import UptimeGui.ModelCase
+      import UptimeGui.Factories
     end
   end
 

@@ -20,18 +20,20 @@ defmodule UptimeGuiWeb.ChannelCase do
       # Import conveniences for testing with channels
       use Phoenix.ChannelTest
 
+      import UptimeGui.Factories
+
       # The default endpoint for testing
       @endpoint UptimeGuiWeb.Endpoint
     end
   end
 
-
   setup tags do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(UptimeGui.Repo)
+
     unless tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(UptimeGui.Repo, {:shared, self()})
     end
+
     :ok
   end
-
 end

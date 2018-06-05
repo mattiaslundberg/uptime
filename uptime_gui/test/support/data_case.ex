@@ -22,6 +22,7 @@ defmodule UptimeGui.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       import UptimeGui.DataCase
+      import UptimeGui.Factories
     end
   end
 
