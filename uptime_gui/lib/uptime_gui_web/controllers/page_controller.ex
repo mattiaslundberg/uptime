@@ -16,19 +16,9 @@ defmodule UptimeGuiWeb.PageController do
 
   def create(conn, _params = %{"check" => check_params}) do
     checks = Check.get_all()
-    changeset = Check.changeset(%Check{}, check_params)
 
-    case Repo.insert(changeset) do
+    case Check.create(check_params) do
       {:ok, check} ->
-        # TODO: Get elks credentials from check?
-        Uptime.add_new_check(
-          check.url,
-          check.notify_number,
-          check.expected_code,
-          Application.get_env(:uptime_gui, :elks_username),
-          Application.get_env(:uptime_gui, :elks_key)
-        )
-
         conn
         |> put_status(:accepted)
         |> redirect(to: "/")

@@ -32,4 +32,24 @@ defmodule UptimeGui.Check do
       "expected_code" => c.expected_code
     }
   end
+
+  def create(params) do
+    changeset = changeset(%__MODULE__{}, params)
+
+    case Repo.insert(changeset) do
+      {:ok, check} ->
+        Uptime.add_new_check(
+          check.url,
+          check.notify_number,
+          check.expected_code,
+          Application.get_env(:uptime_gui, :elks_username),
+          Application.get_env(:uptime_gui, :elks_key)
+        )
+
+        {:ok, check}
+
+      r ->
+        r
+    end
+  end
 end
