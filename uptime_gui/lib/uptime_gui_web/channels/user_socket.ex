@@ -2,7 +2,7 @@ defmodule UptimeGuiWeb.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  channel("check:lobby", UptimeGuiWeb.CheckChannel)
+  channel("checks:*", UptimeGuiWeb.CheckChannel)
 
   ## Transports
   transport(:websocket, Phoenix.Transports.WebSocket)
