@@ -10,33 +10,9 @@ defmodule UptimeGuiWeb.PageControllerTest do
   }
 
   describe "index/2" do
-    test "empty list", %{conn: conn} do
+    test "get", %{conn: conn} do
       conn = get(conn, "/")
-      assert html_response(conn, 200) =~ "Active checks"
-    end
-
-    test "get urls from list", %{conn: conn} do
-      Check.changeset(%Check{}, @valid_attrs) |> Repo.insert!()
-      conn = get(conn, "/")
-      assert html_response(conn, 200) =~ "https://example.com"
-    end
-
-    test "renders form", %{conn: conn} do
-      conn = get(conn, "/")
-      assert html_response(conn, 200) =~ "Notify this number"
-    end
-  end
-
-  describe "create/2" do
-    test "post with valid data", %{conn: conn} do
-      conn = post(conn, "/", %{"check" => @valid_attrs})
-      assert html_response(conn, 202) =~ "redirected"
-    end
-
-    test "post with invalid data", %{conn: conn} do
-      attrs = Map.put(@valid_attrs, :url, nil)
-      conn = post(conn, "/", %{"check" => attrs})
-      assert html_response(conn, 200) =~ "required"
+      assert html_response(conn, 200) =~ "html"
     end
   end
 end
