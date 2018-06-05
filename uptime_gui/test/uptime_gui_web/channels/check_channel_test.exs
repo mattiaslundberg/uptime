@@ -31,5 +31,20 @@ defmodule UptimeGuiWeb.CheckChannelTest do
     test "update non-existing check"
     test "remove existing check"
     test "remove non-existing check"
+
+    # test "ping replies with status ok", %{socket: socket} do
+    #   ref = push(socket, "ping", %{"hello" => "there"})
+    #   assert_reply(ref, :ok, %{"hello" => "there"})
+    # end
+
+    # test "shout broadcasts to check:lobby", %{socket: socket} do
+    #   push(socket, "shout", %{"hello" => "all"})
+    #   assert_broadcast("shout", %{"hello" => "all"})
+    # end
+
+    # test "broadcasts are pushed to the client", %{socket: socket} do
+    #   broadcast_from!(socket, "broadcast", %{"some" => "data"})
+    #   assert_push("broadcast", %{"some" => "data"})
+    # end
   end
 end
