@@ -24,4 +24,12 @@ defmodule UptimeGui.Check do
   def get_all() do
     Repo.all(__MODULE__)
   end
+
+  def serialize(c = %__MODULE__{}) do
+    %{
+      "url" => c.url,
+      "notify_number" => c.notify_number,
+      "expected_code" => c.expected_code
+    }
+  end
 end
