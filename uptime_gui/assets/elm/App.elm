@@ -30,12 +30,14 @@ init : ( Checks, Cmd Msg )
 init =
     let
         channel =
-            Phoenix.Channel.init "check:lobby"
+            Phoenix.Channel.init "checks:ad"
 
         ( initSocket, cmd ) =
             Phoenix.Socket.init "ws://localhost:4000/socket/websocket"
                 |> Phoenix.Socket.withDebug
-                |> Phoenix.Socket.on "new_check" "check:lobby" AddCheck
+                |> Phoenix.Socket.on "create_check" "checks:ad" AddCheck
+                -- |> Phoenix.Socket.on "delete_check" "checks:ad" AddCheck
+                -- |> Phoenix.Socket.on "update_check" "checks:ad" AddCheck
                 |> Phoenix.Socket.join channel
 
         model =

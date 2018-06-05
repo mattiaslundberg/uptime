@@ -1,10 +1,11 @@
 defmodule UptimeGuiWeb.CheckChannel do
   use UptimeGuiWeb, :channel
 
-  def join("check:lobby", payload, socket) do
-    if authorized?(payload) do
-      send(self, :after_join)
+  alias UptimeGui.Check
 
+  def join("checks:" <> user_id, payload, socket) do
+    if authorized?(user_id, payload) do
+      send(self(), :after_join)
       {:ok, socket}
     else
       {:error, %{reason: "unauthorized"}}
@@ -12,30 +13,30 @@ defmodule UptimeGuiWeb.CheckChannel do
   end
 
   def handle_info(:after_join, socket) do
-    UptimeGui.Check.get_all()
+    Check.get_all()
     |> Enum.map(fn c ->
-      IO.inspect(c)
-      push(socket, "new_check", UptimeGui.Check.serialize(c))
+      push(socket, "create_check", UptimeGui.Check.serialize(c))
     end)
 
     {:noreply, socket}
   end
 
-  # Channels can be used in a request/response fashion
-  # by sending replies to requests from the client
-  def handle_in("ping", payload, socket) do
+  def handle_in("create_check", payload, socket) do
+    broadcast(socket, "create_check", payload)
     {:reply, {:ok, payload}, socket}
   end
 
-  # It is also common to receive messages from the client and
-  # broadcast to everyone in the current topic (check:lobby).
-  def handle_in("shout", payload, socket) do
-    broadcast(socket, "shout", payload)
-    {:noreply, socket}
+  def handle_in("update_check", payload, socket) do
+    broadcast(socket, "update_check", payload)
+    {:reply, {:ok, payload}, socket}
   end
 
-  # Add authorization logic here as required.
-  defp authorized?(_payload) do
+  def handle_in("remove_check", payload, socket) do
+    broadcast(socket, "remove_check", payload)
+    {:reply, {:ok, payload}, socket}
+  end
+
+  defp authorized?(_user_id, _payload) do
     true
   end
 end
