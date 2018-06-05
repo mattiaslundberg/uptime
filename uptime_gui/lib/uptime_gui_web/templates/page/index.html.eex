@@ -22,3 +22,5 @@
 
   <%= submit "Save" %>
 <% end %>
+
+<div id="elm-main"></div>

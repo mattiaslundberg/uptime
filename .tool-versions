@@ -1,2 +1,4 @@
 elixir 1.6.5
 erlang 20.3.6
+nodejs 10.3.0
+elm 0.18.0
