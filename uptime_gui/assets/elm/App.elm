@@ -29,6 +29,7 @@ type Msg
     | CreateCheck
     | PhxAddCheck Json.Encode.Value
     | SetNewUrl String
+    | SetNewNumber String
 
 
 init : ( Checks, Cmd Msg )
@@ -93,6 +94,13 @@ update msg checks =
             in
                 ( { checks | next_check = { current | url = str } }, Cmd.none )
 
+        SetNewNumber str ->
+            let
+                current =
+                    checks.next_check
+            in
+                ( { checks | next_check = { current | notify_number = str } }, Cmd.none )
+
         CreateCheck ->
             ( checks, Cmd.none )
 
@@ -119,7 +127,7 @@ view checks =
                 ]
             , label []
                 [ text "Notify number"
-                , input []
+                , input [ onInput SetNewNumber ]
                     []
                 ]
             , label []
