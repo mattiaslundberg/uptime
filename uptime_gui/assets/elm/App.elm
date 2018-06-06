@@ -2,7 +2,7 @@ module App exposing (..)
 
 import Json.Encode
 import Json.Decode exposing (field)
-import Html exposing (..)
+import Html exposing (Html, li, text, div, ul, form, label, input, button)
 import Html.Attributes exposing (value)
 import Html.Events exposing (onSubmit, onInput)
 import List
