@@ -3,7 +3,7 @@ defmodule UptimeGuiWeb.CheckChannel do
 
   require Logger
 
-  alias UptimeGui.Check
+  alias UptimeGui.{Check, Repo}
 
   def join("checks:" <> user_id, payload, socket) do
     if authorized?(user_id, payload) do
