@@ -28,6 +28,7 @@ type Msg
     = PhoenixMsg (Phoenix.Socket.Msg Msg)
     | CreateCheck
     | PhxAddCheck Json.Encode.Value
+    | SetNewUrl String
 
 
 init : ( Checks, Cmd Msg )
@@ -85,6 +86,13 @@ update msg checks =
                     Debug.log (error)
                         ( checks, Cmd.none )
 
+        SetNewUrl str ->
+            let
+                current =
+                    checks.next_check
+            in
+                ( { checks | next_check = { current | url = str } }, Cmd.none )
+
         CreateCheck ->
             ( checks, Cmd.none )
 
@@ -106,7 +114,7 @@ view checks =
         , form [ onSubmit CreateCheck ]
             [ label []
                 [ text "Url"
-                , input []
+                , input [ onInput SetNewUrl ]
                     []
                 ]
             , label []
