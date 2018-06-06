@@ -22,8 +22,14 @@ defmodule UptimeGuiWeb.CheckChannel do
   end
 
   def handle_in("create_check", payload, socket) do
-    broadcast(socket, "create_check", payload)
-    {:reply, {:ok, payload}, socket}
+    case Check.create(payload) do
+      {:ok, check} ->
+        broadcast(socket, "create_check", Check.serialize(check))
+        {:reply, {:ok, Check.serialize(check)}, socket}
+
+      {:error, changeset} ->
+        {:reply, {:error, changeset}, socket}
+    end
   end
 
   def handle_in("update_check", payload, socket) do

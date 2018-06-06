@@ -27,6 +27,7 @@ defmodule UptimeGui.Check do
 
   def serialize(c = %__MODULE__{}) do
     %{
+      "id" => c.id,
       "url" => c.url,
       "notify_number" => c.notify_number,
       "expected_code" => c.expected_code
