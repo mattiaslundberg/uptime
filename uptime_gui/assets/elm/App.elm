@@ -8,9 +8,10 @@ import Bootstrap.Form as Form
 import Bootstrap.Button as Button
 import Json.Decode exposing (field)
 import Html exposing (Html, li, text, div, ul, form, label, input, button, span)
-import Html.Attributes exposing (value, for)
+import Html.Attributes exposing (value, for, type_)
 import Html.Events exposing (onSubmit, onInput, onClick)
 import List
+import List.Extra exposing (find)
 import Phoenix.Socket
 import Phoenix.Channel
 import Phoenix.Push
@@ -45,6 +46,7 @@ type Msg
     | SetNewNumber String
     | SetNewResponse String
     | DeleteCheck Int
+    | EditCheck Int
 
 
 new_next_check : Check
@@ -191,6 +193,18 @@ update msg checks =
             in
                 ( { checks | socket = socket }, Cmd.map PhoenixMsg phxCmd )
 
+        EditCheck checkId ->
+            let
+                check =
+                    find (\c -> c.id == checkId) checks.checks
+            in
+                case check of
+                    Just check ->
+                        ( { checks | next_check = check }, Cmd.none )
+
+                    Nothing ->
+                        ( checks, Cmd.none )
+
 
 drawCheck : Check -> Html Msg
 drawCheck check =
@@ -198,7 +212,13 @@ drawCheck check =
         [ Grid.col [] [ text check.url ]
         , Grid.col [] [ text check.notify_number ]
         , Grid.col [] [ text (toString check.expected_code) ]
-        , Grid.col [] [ Button.button [ Button.attrs [ onClick (DeleteCheck check.id) ] ] [ text "Delete" ] ]
+        , Grid.col []
+            [ Button.button [ Button.attrs [ onClick (EditCheck check.id) ] ]
+                [ text "Edit" ]
+            , Button.button
+                [ Button.attrs [ onClick (DeleteCheck check.id) ] ]
+                [ text "Delete" ]
+            ]
         ]
 
 
@@ -209,21 +229,21 @@ drawChecks checks =
 
 drawForm : Check -> List (Html Msg)
 drawForm check =
-    [ Form.form []
+    [ Form.form [ onSubmit CreateCheck ]
         [ Form.group []
             [ Form.label [ for "url" ] [ text "Url" ]
             , Input.text [ Input.id "url", Input.attrs [ value check.url, onInput SetNewUrl ] ]
             ]
+        , Form.group []
+            [ Form.label [ for "notify_no" ] [ text "Notify number" ]
+            , Input.text [ Input.id "notify_no", Input.attrs [ value check.notify_number, onInput SetNewNumber ] ]
+            ]
+        , Form.group []
+            [ Form.label [ for "expected_code" ] [ text "Expected response code" ]
+            , Input.text [ Input.id "expected_code", Input.attrs [ value (toString check.expected_code), onInput SetNewResponse ] ]
+            ]
+        , Button.button [ Button.attrs [ type_ "submit" ] ] [ text "Save" ]
         ]
-    , Form.group []
-        [ Form.label [ for "notify_no" ] [ text "Notify number" ]
-        , Input.text [ Input.id "notify_no", Input.attrs [ value check.notify_number, onInput SetNewNumber ] ]
-        ]
-    , Form.group []
-        [ Form.label [ for "expected_code" ] [ text "Expected response code" ]
-        , Input.text [ Input.id "expected_code", Input.attrs [ value (toString check.expected_code), onInput SetNewResponse ] ]
-        ]
-    , Button.button [] [ text "Save" ]
     ]
 
 
