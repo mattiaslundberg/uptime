@@ -248,9 +248,18 @@ drawChecks checks =
     checks |> List.map drawCheck
 
 
+drawEditMessage : Check -> Html Msg
+drawEditMessage check =
+    if check.id == 0 then
+        div [] [ text "Create new check" ]
+    else
+        div [] [ text "Edit check" ]
+
+
 drawForm : Check -> List (Html Msg)
 drawForm check =
-    [ Form.form [ onSubmit SubmitForm ]
+    [ drawEditMessage check
+    , Form.form [ onSubmit SubmitForm ]
         [ Form.group []
             [ Form.label [ for "url" ] [ text "Url" ]
             , Input.text [ Input.id "url", Input.attrs [ value check.url, onInput SetNewUrl ] ]
