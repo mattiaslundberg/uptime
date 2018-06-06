@@ -115,7 +115,7 @@ update msg checks =
                     checks.next_check
 
                 new_value =
-                    Result.withDefault 200 (String.toInt str)
+                    Result.withDefault checks.next_check.expected_code (String.toInt str)
             in
                 ( { checks | next_check = { current | expected_code = new_value } }, Cmd.none )
 
