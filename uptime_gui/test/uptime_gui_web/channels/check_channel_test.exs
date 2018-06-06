@@ -92,7 +92,16 @@ defmodule UptimeGuiWeb.CheckChannelTest do
       assert_reply(ref, :error, ^expected)
     end
 
-    # test "remove existing check"
-    # test "remove non-existing check"
+    test "remove existing check", %{socket: socket} do
+      {:ok, check} = insert_check()
+
+      ref = push(socket, "remove_check", %{"id" => check.id})
+      assert_reply(ref, :ok, %{})
+    end
+
+    test "remove non-existing check", %{socket: socket} do
+      ref = push(socket, "remove_check", %{"id" => 3})
+      assert_reply(ref, :error, %{"msg" => "Check not found"})
+    end
   end
 end
