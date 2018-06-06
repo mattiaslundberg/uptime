@@ -3,6 +3,7 @@ module App exposing (..)
 import Json.Encode
 import Json.Decode exposing (field)
 import Html exposing (..)
+import Html.Events exposing (onSubmit, onInput)
 import List
 import Phoenix.Socket
 import Phoenix.Channel
@@ -19,11 +20,13 @@ type alias Check =
 type alias Checks =
     { socket : Phoenix.Socket.Socket Msg
     , checks : List Check
+    , next_check : Check
     }
 
 
 type Msg
     = PhoenixMsg (Phoenix.Socket.Msg Msg)
+    | CreateCheck
     | AddCheck Json.Encode.Value
 
 
@@ -44,6 +47,7 @@ init =
         model =
             { socket = initSocket
             , checks = []
+            , next_check = Check 0 "" "" 200
             }
     in
         ( model, Cmd.map PhoenixMsg cmd )
@@ -81,6 +85,9 @@ update msg checks =
                     Debug.log (error)
                         ( checks, Cmd.none )
 
+        CreateCheck ->
+            ( checks, Cmd.none )
+
 
 drawCheck : Check -> Html Msg
 drawCheck check =
@@ -96,9 +103,22 @@ view : Checks -> Html Msg
 view checks =
     div []
         [ ul [] (checks.checks |> drawChecks)
-        , form []
-            [ input []
-                []
+        , form [ onSubmit CreateCheck ]
+            [ label []
+                [ text "Url"
+                , input []
+                    []
+                ]
+            , label []
+                [ text "Notify number"
+                , input []
+                    []
+                ]
+            , label []
+                [ text "Expected response code"
+                , input []
+                    []
+                ]
             , button []
                 [ text "Submit"
                 ]
