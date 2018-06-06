@@ -9,7 +9,8 @@ import Phoenix.Channel
 
 
 type alias Check =
-    { url : String
+    { id : Int
+    , url : String
     , notify_number : String
     , expected_code : Int
     }
@@ -50,7 +51,8 @@ init =
 
 checkDecoder : Json.Decode.Decoder Check
 checkDecoder =
-    Json.Decode.map3 Check
+    Json.Decode.map4 Check
+        (field "id" Json.Decode.int)
         (field "url" Json.Decode.string)
         (field "notify_number" Json.Decode.string)
         (field "expected_code" Json.Decode.int)
