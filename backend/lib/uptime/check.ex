@@ -23,7 +23,7 @@ defmodule Uptime.Check do
 
   def maybe_send_notification(check = %__MODULE__{}, sender \\ Uptime.FourSixElksSender) do
     if check.failed_checks >= @required_fails and not check.alert_sent do
-      sender.send_message(get_message(check))
+      sender.send_message(get_message(check), check)
       %{check | alert_sent: true}
     else
       check

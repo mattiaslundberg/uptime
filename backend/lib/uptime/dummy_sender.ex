@@ -1,7 +1,7 @@
 defmodule Uptime.DummySender do
   use GenServer
 
-  alias Uptime.Message
+  alias Uptime.{Check, Message}
 
   def start_link(state) do
     GenServer.start_link(__MODULE__, state, name: __MODULE__)
@@ -11,7 +11,7 @@ defmodule Uptime.DummySender do
     GenServer.cast(__MODULE__, :reset)
   end
 
-  def send_message(msg = %Message{}) do
+  def send_message(msg = %Message{}, %Check{}) do
     GenServer.cast(__MODULE__, msg)
   end
 

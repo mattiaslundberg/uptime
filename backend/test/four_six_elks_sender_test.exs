@@ -8,7 +8,7 @@ defmodule FourSixElksSenderTest do
   import ExUnit.CaptureLog
   import Mock
 
-  describe "send_message/1" do
+  describe "send_message/2" do
     test_with_mock "sends successful response", HTTPotion,
       post: fn _url, _data ->
         %HTTPotion.Response{status_code: 200, body: "{\"status\": \"created\"}"}
