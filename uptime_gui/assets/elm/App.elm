@@ -38,7 +38,7 @@ type alias Checks =
 
 type Msg
     = PhoenixMsg (Phoenix.Socket.Msg Msg)
-    | CreateCheck
+    | SubmitForm
     | PhxAddCheck Json.Encode.Value
     | PhxDeleteCheck Json.Encode.Value
     | PhxUpdateCheck Json.Encode.Value
@@ -167,7 +167,7 @@ update msg checks =
             in
                 ( { checks | next_check = { current | expected_code = new_value } }, Cmd.none )
 
-        CreateCheck ->
+        SubmitForm ->
             let
                 payload =
                     (Json.Encode.object [ ( "url", Json.Encode.string checks.next_check.url ), ( "notify_number", Json.Encode.string checks.next_check.notify_number ), ( "expected_code", Json.Encode.int checks.next_check.expected_code ) ])
@@ -229,7 +229,7 @@ drawChecks checks =
 
 drawForm : Check -> List (Html Msg)
 drawForm check =
-    [ Form.form [ onSubmit CreateCheck ]
+    [ Form.form [ onSubmit SubmitForm ]
         [ Form.group []
             [ Form.label [ for "url" ] [ text "Url" ]
             , Input.text [ Input.id "url", Input.attrs [ value check.url, onInput SetNewUrl ] ]
