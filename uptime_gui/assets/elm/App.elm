@@ -11,6 +11,10 @@ import Phoenix.Channel
 import Phoenix.Push
 
 
+type alias Id =
+    { id : Int }
+
+
 type alias Check =
     { id : Int
     , url : String
@@ -65,6 +69,12 @@ init =
         ( model, Cmd.map PhoenixMsg cmd )
 
 
+idDecoder : Json.Decode.Decoder Id
+idDecoder =
+    Json.Decode.map Id
+        (field "id" Json.Decode.int)
+
+
 checkDecoder : Json.Decode.Decoder Check
 checkDecoder =
     Json.Decode.map4 Check
@@ -98,8 +108,12 @@ update msg checks =
                         ( checks, Cmd.none )
 
         PhxDeleteCheck raw ->
-            -- FIXME: Filter list
-            ( checks, Cmd.none )
+            case Json.Decode.decodeValue idDecoder raw of
+                Ok data ->
+                    ( { checks | checks = List.filter (\c -> c.id == data.id) checks.checks }, Cmd.none )
+
+                Err error ->
+                    Debug.log (error) ( checks, Cmd.none )
 
         SetNewUrl str ->
             let
