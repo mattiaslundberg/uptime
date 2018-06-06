@@ -45,12 +45,53 @@ defmodule UptimeGuiWeb.CheckChannelTest do
       :timer.sleep(100)
 
       [] = Repo.all(Check)
+
+      # TODO: Serialize changeset and test
       assert_reply(ref, :error, %{})
     end
 
-    # test "update existing check with valid parameters"
-    # test "update existing check with invalid parameters"
-    # test "update non-existing check"
+    test "update existing check with valid parameters", %{socket: socket} do
+      {:ok, check} = insert_check()
+
+      params = %{
+        "id" => check.id,
+        "url" => "https://new.example.com"
+      }
+
+      ref = push(socket, "update_check", params)
+      expected = Check.serialize(Map.put(check, :url, "https://new.example.com"))
+      assert_reply(ref, :ok, ^expected)
+
+      %Check{url: "https://new.example.com"} = Repo.get(Check, check.id)
+    end
+
+    test "update existing check with invalid parameters", %{socket: socket} do
+      {:ok, check} = insert_check()
+
+      params = %{
+        "id" => check.id,
+        "url" => "invalid"
+      }
+
+      ref = push(socket, "update_check", params)
+
+      # TODO: Serialize changeset and test
+      assert_reply(ref, :error, %{})
+    end
+
+    test "update non-existing check", %{socket: socket} do
+      params = %{
+        "id" => 3,
+        "url" => "https://new.example.com"
+      }
+
+      ref = push(socket, "update_check", params)
+
+      expected = %{"msg" => "Check not found"}
+
+      assert_reply(ref, :error, ^expected)
+    end
+
     # test "remove existing check"
     # test "remove non-existing check"
   end
