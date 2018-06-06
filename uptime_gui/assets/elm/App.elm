@@ -3,6 +3,7 @@ module App exposing (..)
 import Json.Encode
 import Json.Decode exposing (field)
 import Html exposing (..)
+import Html.Attributes exposing (value)
 import Html.Events exposing (onSubmit, onInput)
 import List
 import Phoenix.Socket
@@ -33,6 +34,11 @@ type Msg
     | SetNewNumber String
 
 
+new_next_check : Check
+new_next_check =
+    Check 0 "" "" 200
+
+
 init : ( Checks, Cmd Msg )
 init =
     let
@@ -50,7 +56,7 @@ init =
         model =
             { socket = initSocket
             , checks = []
-            , next_check = Check 0 "" "" 200
+            , next_check = new_next_check
             }
     in
         ( model, Cmd.map PhoenixMsg cmd )
@@ -113,7 +119,7 @@ update msg checks =
                 ( socket, phxCmd ) =
                     Phoenix.Socket.push cmd checks.socket
             in
-                ( { checks | socket = socket }, Cmd.map PhoenixMsg phxCmd )
+                ( { checks | socket = socket, next_check = new_next_check }, Cmd.map PhoenixMsg phxCmd )
 
 
 drawCheck : Check -> Html Msg
@@ -133,17 +139,17 @@ view checks =
         , form [ onSubmit CreateCheck ]
             [ label []
                 [ text "Url"
-                , input [ onInput SetNewUrl ]
+                , input [ value checks.next_check.url, onInput SetNewUrl ]
                     []
                 ]
             , label []
                 [ text "Notify number"
-                , input [ onInput SetNewNumber ]
+                , input [ value checks.next_check.notify_number, onInput SetNewNumber ]
                     []
                 ]
             , label []
                 [ text "Expected response code"
-                , input []
+                , input [ value (toString checks.next_check.expected_code) ]
                     []
                 ]
             , button []
