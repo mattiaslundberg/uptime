@@ -32,6 +32,7 @@ type Msg
     | PhxAddCheck Json.Encode.Value
     | SetNewUrl String
     | SetNewNumber String
+    | SetNewResponse String
 
 
 new_next_check : Check
@@ -108,6 +109,16 @@ update msg checks =
             in
                 ( { checks | next_check = { current | notify_number = str } }, Cmd.none )
 
+        SetNewResponse str ->
+            let
+                current =
+                    checks.next_check
+
+                new_value =
+                    Result.withDefault 200 (String.toInt str)
+            in
+                ( { checks | next_check = { current | expected_code = new_value } }, Cmd.none )
+
         CreateCheck ->
             let
                 payload =
@@ -149,7 +160,7 @@ view checks =
                 ]
             , label []
                 [ text "Expected response code"
-                , input [ value (toString checks.next_check.expected_code) ]
+                , input [ value (toString checks.next_check.expected_code), onInput SetNewResponse ]
                     []
                 ]
             , button []
