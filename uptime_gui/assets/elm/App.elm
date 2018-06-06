@@ -223,7 +223,7 @@ drawForm check =
         [ Form.label [ for "expected_code" ] [ text "Expected response code" ]
         , Input.text [ Input.id "expected_code", Input.attrs [ value (toString check.expected_code), onInput SetNewResponse ] ]
         ]
-    , Button.button [] [ text "Submit" ]
+    , Button.button [] [ text "Save" ]
     ]
 
 
