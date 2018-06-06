@@ -7,6 +7,7 @@ import Html.Events exposing (onSubmit, onInput)
 import List
 import Phoenix.Socket
 import Phoenix.Channel
+import Phoenix.Push
 
 
 type alias Check =
@@ -102,7 +103,17 @@ update msg checks =
                 ( { checks | next_check = { current | notify_number = str } }, Cmd.none )
 
         CreateCheck ->
-            ( checks, Cmd.none )
+            let
+                payload =
+                    (Json.Encode.object [ ( "url", Json.Encode.string checks.next_check.url ), ( "notify_number", Json.Encode.string checks.next_check.notify_number ), ( "expected_code", Json.Encode.int checks.next_check.expected_code ) ])
+
+                cmd =
+                    Phoenix.Push.init "create_check" "checks:ad" |> Phoenix.Push.withPayload payload
+
+                ( socket, phxCmd ) =
+                    Phoenix.Socket.push cmd checks.socket
+            in
+                ( { checks | socket = socket }, Cmd.map PhoenixMsg phxCmd )
 
 
 drawCheck : Check -> Html Msg
