@@ -1,9 +1,14 @@
 module App exposing (..)
 
 import Json.Encode
+import Bootstrap.CDN as CDN
+import Bootstrap.Grid as Grid
+import Bootstrap.Form.Input as Input
+import Bootstrap.Form as Form
+import Bootstrap.Button as Button
 import Json.Decode exposing (field)
 import Html exposing (Html, li, text, div, ul, form, label, input, button, span)
-import Html.Attributes exposing (value)
+import Html.Attributes exposing (value, for)
 import Html.Events exposing (onSubmit, onInput, onClick)
 import List
 import Phoenix.Socket
@@ -189,11 +194,11 @@ update msg checks =
 
 drawCheck : Check -> Html Msg
 drawCheck check =
-    li []
-        [ span []
-            [ text check.url
-            ]
-        , button [ onClick (DeleteCheck check.id) ] [ text "Delete" ]
+    Grid.row []
+        [ Grid.col [] [ text check.url ]
+        , Grid.col [] [ text check.notify_number ]
+        , Grid.col [] [ text (toString check.expected_code) ]
+        , Grid.col [] [ Button.button [ Button.attrs [ onClick (DeleteCheck check.id) ] ] [ text "Delete" ] ]
         ]
 
 
@@ -202,31 +207,36 @@ drawChecks checks =
     checks |> List.map drawCheck
 
 
+drawForm : Check -> List (Html Msg)
+drawForm check =
+    [ Form.form []
+        [ Form.group []
+            [ Form.label [ for "url" ] [ text "Url" ]
+            , Input.text [ Input.id "url", Input.attrs [ value check.url, onInput SetNewUrl ] ]
+            ]
+        ]
+    , Form.group []
+        [ Form.label [ for "notify_no" ] [ text "Notify number" ]
+        , Input.text [ Input.id "notify_no", Input.attrs [ value check.notify_number, onInput SetNewNumber ] ]
+        ]
+    , Form.group []
+        [ Form.label [ for "expected_code" ] [ text "Expected response code" ]
+        , Input.text [ Input.id "expected_code", Input.attrs [ value (toString check.expected_code), onInput SetNewResponse ] ]
+        ]
+    , Button.button [] [ text "Submit" ]
+    ]
+
+
 view : Checks -> Html Msg
 view checks =
     div []
-        [ ul [] (checks.checks |> drawChecks)
-        , form [ onSubmit CreateCheck ]
-            [ label []
-                [ text "Url"
-                , input [ value checks.next_check.url, onInput SetNewUrl ]
-                    []
-                ]
-            , label []
-                [ text "Notify number"
-                , input [ value checks.next_check.notify_number, onInput SetNewNumber ]
-                    []
-                ]
-            , label []
-                [ text "Expected response code"
-                , input [ value (toString checks.next_check.expected_code), onInput SetNewResponse ]
-                    []
-                ]
-            , button []
-                [ text "Submit"
-                ]
+        ([ Grid.container []
+            [ CDN.stylesheet
+            , Grid.container [] (drawChecks checks.checks)
             ]
-        ]
+         ]
+            ++ drawForm checks.next_check
+        )
 
 
 subscriptions : Checks -> Sub Msg
