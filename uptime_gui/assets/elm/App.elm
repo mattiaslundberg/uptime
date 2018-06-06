@@ -1,14 +1,15 @@
 module App exposing (..)
 
 import Json.Encode
+import Bootstrap.Table as Table
 import Bootstrap.CDN as CDN
 import Bootstrap.Grid as Grid
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form as Form
 import Bootstrap.Button as Button
 import Json.Decode exposing (field)
-import Html exposing (Html, li, text, div, ul, form, label, input, button, span)
-import Html.Attributes exposing (value, for, type_)
+import Html exposing (Html, li, text, div, ul, form, label, input, button, span, h1, h2)
+import Html.Attributes exposing (value, for, type_, class)
 import Html.Events exposing (onSubmit, onInput, onClick)
 import List
 import List.Extra exposing (find)
@@ -227,13 +228,13 @@ generateFormSerializer check =
         [ ( "id", Json.Encode.int check.id ), ( "url", Json.Encode.string check.url ), ( "notify_number", Json.Encode.string check.notifyNumber ), ( "expected_code", Json.Encode.int check.expectedCode ) ]
 
 
-drawCheck : Check -> Html Msg
+drawCheck : Check -> Table.Row Msg
 drawCheck check =
-    Grid.row []
-        [ Grid.col [] [ text check.url ]
-        , Grid.col [] [ text check.notifyNumber ]
-        , Grid.col [] [ text (toString check.expectedCode) ]
-        , Grid.col []
+    Table.tr []
+        [ Table.td [] [ text check.url ]
+        , Table.td [] [ text check.notifyNumber ]
+        , Table.td [] [ text (toString check.expectedCode) ]
+        , Table.td []
             [ Button.button [ Button.attrs [ onClick (EditCheck check.id) ] ]
                 [ text "Edit" ]
             , Button.button
@@ -243,17 +244,32 @@ drawCheck check =
         ]
 
 
-drawChecks : List Check -> List (Html Msg)
+drawChecks : List Check -> Html Msg
 drawChecks checks =
-    checks |> List.map drawCheck
+    Table.simpleTable
+        ( Table.simpleThead
+            [ Table.th [] [ text "Url" ]
+            , Table.th [] [ text "Notify number" ]
+            , Table.th [] [ text "Expected response" ]
+            , Table.th [] [ text "Actions" ]
+            ]
+        , Table.tbody []
+            (checks
+                |> List.map drawCheck
+            )
+        )
 
 
 drawEditMessage : Check -> Html Msg
 drawEditMessage check =
-    if check.id == 0 then
-        div [] [ text "Create new check" ]
-    else
-        div [] [ text "Edit check" ]
+    let
+        t =
+            if check.id == 0 then
+                "Create new check"
+            else
+                "Edit check"
+    in
+        Grid.row [] [ Grid.col [] [ h2 [ class "text-center" ] [ text t ] ] ]
 
 
 drawForm : Check -> List (Html Msg)
@@ -272,7 +288,7 @@ drawForm check =
             [ Form.label [ for "expected_code" ] [ text "Expected response code" ]
             , Input.text [ Input.id "expected_code", Input.attrs [ value (toString check.expectedCode), onInput SetNewResponse ] ]
             ]
-        , Button.button [ Button.attrs [ type_ "submit" ] ] [ text "Save" ]
+        , Button.button [ Button.attrs [ type_ "submit", class "float-right" ] ] [ text "Save" ]
         ]
     ]
 
@@ -280,9 +296,16 @@ drawForm check =
 view : Checks -> Html Msg
 view checks =
     div []
-        ([ Grid.container []
+        ([ div []
             [ CDN.stylesheet
-            , Grid.container [] (drawChecks checks.checks)
+            , Grid.container []
+                ([ Grid.row [] [ Grid.col [] [ h1 [ class "text-center" ] [ text "Uptime" ] ] ]
+                 , Grid.row [] [ Grid.col [] [ div [ class "text-center" ] [ text "Monitors uptime for selected sites and notifies by text in case of problems." ] ] ]
+                 , Grid.row [] [ Grid.col [] [ h2 [ class "text-center" ] [ text "Active checks" ] ] ]
+                 , Grid.row [] [ Grid.col [] [ text " " ] ]
+                 ]
+                    ++ [ drawChecks checks.checks ]
+                )
             ]
          ]
             ++ drawForm checks.nextCheck
