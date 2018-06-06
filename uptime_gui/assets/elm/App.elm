@@ -2,9 +2,9 @@ module App exposing (..)
 
 import Json.Encode
 import Json.Decode exposing (field)
-import Html exposing (Html, li, text, div, ul, form, label, input, button)
+import Html exposing (Html, li, text, div, ul, form, label, input, button, span)
 import Html.Attributes exposing (value)
-import Html.Events exposing (onSubmit, onInput)
+import Html.Events exposing (onSubmit, onInput, onClick)
 import List
 import Phoenix.Socket
 import Phoenix.Channel
@@ -30,9 +30,11 @@ type Msg
     = PhoenixMsg (Phoenix.Socket.Msg Msg)
     | CreateCheck
     | PhxAddCheck Json.Encode.Value
+    | PhxDeleteCheck Json.Encode.Value
     | SetNewUrl String
     | SetNewNumber String
     | SetNewResponse String
+    | DeleteCheck Int
 
 
 new_next_check : Check
@@ -50,7 +52,7 @@ init =
             Phoenix.Socket.init "ws://localhost:4000/socket/websocket"
                 |> Phoenix.Socket.withDebug
                 |> Phoenix.Socket.on "create_check" "checks:ad" PhxAddCheck
-                -- |> Phoenix.Socket.on "delete_check" "checks:ad" PhxDeleteCheck
+                |> Phoenix.Socket.on "remove_check" "checks:ad" PhxDeleteCheck
                 -- |> Phoenix.Socket.on "update_check" "checks:ad" PhxUpdateCheck
                 |> Phoenix.Socket.join channel
 
@@ -95,6 +97,10 @@ update msg checks =
                     Debug.log (error)
                         ( checks, Cmd.none )
 
+        PhxDeleteCheck raw ->
+            -- FIXME: Filter list
+            ( checks, Cmd.none )
+
         SetNewUrl str ->
             let
                 current =
@@ -132,10 +138,28 @@ update msg checks =
             in
                 ( { checks | socket = socket, next_check = new_next_check }, Cmd.map PhoenixMsg phxCmd )
 
+        DeleteCheck checkId ->
+            let
+                payload =
+                    (Json.Encode.object [ ( "id", Json.Encode.int checkId ) ])
+
+                cmd =
+                    Phoenix.Push.init "remove_check" "checks:ad" |> Phoenix.Push.withPayload payload
+
+                ( socket, phxCmd ) =
+                    Phoenix.Socket.push cmd checks.socket
+            in
+                ( { checks | socket = socket }, Cmd.map PhoenixMsg phxCmd )
+
 
 drawCheck : Check -> Html Msg
 drawCheck check =
-    li [] [ text check.url ]
+    li []
+        [ span []
+            [ text check.url
+            ]
+        , button [ onClick (DeleteCheck check.id) ] [ text "Delete" ]
+        ]
 
 
 drawChecks : List Check -> List (Html Msg)
