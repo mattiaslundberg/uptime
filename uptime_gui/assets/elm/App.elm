@@ -24,15 +24,15 @@ type alias Id =
 type alias Check =
     { id : Int
     , url : String
-    , notify_number : String
-    , expected_code : Int
+    , notifyNumber : String
+    , expectedCode : Int
     }
 
 
 type alias Checks =
     { socket : Phoenix.Socket.Socket Msg
     , checks : List Check
-    , next_check : Check
+    , nextCheck : Check
     }
 
 
@@ -49,8 +49,8 @@ type Msg
     | EditCheck Int
 
 
-new_next_check : Check
-new_next_check =
+newNextCheck : Check
+newNextCheck =
     Check 0 "" "" 200
 
 
@@ -71,7 +71,7 @@ init =
         model =
             { socket = initSocket
             , checks = []
-            , next_check = new_next_check
+            , nextCheck = newNextCheck
             }
     in
         ( model, Cmd.map PhoenixMsg cmd )
@@ -146,36 +146,36 @@ update msg checks =
         SetNewUrl str ->
             let
                 current =
-                    checks.next_check
+                    checks.nextCheck
             in
-                ( { checks | next_check = { current | url = str } }, Cmd.none )
+                ( { checks | nextCheck = { current | url = str } }, Cmd.none )
 
         SetNewNumber str ->
             let
                 current =
-                    checks.next_check
+                    checks.nextCheck
             in
-                ( { checks | next_check = { current | notify_number = str } }, Cmd.none )
+                ( { checks | nextCheck = { current | notifyNumber = str } }, Cmd.none )
 
         SetNewResponse str ->
             let
                 current =
-                    checks.next_check
+                    checks.nextCheck
 
-                new_value =
-                    Result.withDefault checks.next_check.expected_code (String.toInt str)
+                newValue =
+                    Result.withDefault checks.nextCheck.expectedCode (String.toInt str)
             in
-                ( { checks | next_check = { current | expected_code = new_value } }, Cmd.none )
+                ( { checks | nextCheck = { current | expectedCode = newValue } }, Cmd.none )
 
         SubmitForm ->
             let
                 cmd =
-                    generateSubmitFormCommand checks.next_check
+                    generateSubmitFormCommand checks.nextCheck
 
                 ( socket, phxCmd ) =
                     Phoenix.Socket.push cmd checks.socket
             in
-                ( { checks | socket = socket, next_check = new_next_check }, Cmd.map PhoenixMsg phxCmd )
+                ( { checks | socket = socket, nextCheck = newNextCheck }, Cmd.map PhoenixMsg phxCmd )
 
         DeleteCheck checkId ->
             let
@@ -197,7 +197,7 @@ update msg checks =
             in
                 case check of
                     Just check ->
-                        ( { checks | next_check = check }, Cmd.none )
+                        ( { checks | nextCheck = check }, Cmd.none )
 
                     Nothing ->
                         ( checks, Cmd.none )
@@ -222,17 +222,17 @@ generateSubmitFormCommand check =
 generateFormSerializer : Check -> List ( String, Json.Encode.Value )
 generateFormSerializer check =
     if check.id == 0 then
-        [ ( "url", Json.Encode.string check.url ), ( "notify_number", Json.Encode.string check.notify_number ), ( "expected_code", Json.Encode.int check.expected_code ) ]
+        [ ( "url", Json.Encode.string check.url ), ( "notify_number", Json.Encode.string check.notifyNumber ), ( "expected_code", Json.Encode.int check.expectedCode ) ]
     else
-        [ ( "id", Json.Encode.int check.id ), ( "url", Json.Encode.string check.url ), ( "notify_number", Json.Encode.string check.notify_number ), ( "expected_code", Json.Encode.int check.expected_code ) ]
+        [ ( "id", Json.Encode.int check.id ), ( "url", Json.Encode.string check.url ), ( "notify_number", Json.Encode.string check.notifyNumber ), ( "expected_code", Json.Encode.int check.expectedCode ) ]
 
 
 drawCheck : Check -> Html Msg
 drawCheck check =
     Grid.row []
         [ Grid.col [] [ text check.url ]
-        , Grid.col [] [ text check.notify_number ]
-        , Grid.col [] [ text (toString check.expected_code) ]
+        , Grid.col [] [ text check.notifyNumber ]
+        , Grid.col [] [ text (toString check.expectedCode) ]
         , Grid.col []
             [ Button.button [ Button.attrs [ onClick (EditCheck check.id) ] ]
                 [ text "Edit" ]
@@ -257,11 +257,11 @@ drawForm check =
             ]
         , Form.group []
             [ Form.label [ for "notify_no" ] [ text "Notify number" ]
-            , Input.text [ Input.id "notify_no", Input.attrs [ value check.notify_number, onInput SetNewNumber ] ]
+            , Input.text [ Input.id "notify_no", Input.attrs [ value check.notifyNumber, onInput SetNewNumber ] ]
             ]
         , Form.group []
             [ Form.label [ for "expected_code" ] [ text "Expected response code" ]
-            , Input.text [ Input.id "expected_code", Input.attrs [ value (toString check.expected_code), onInput SetNewResponse ] ]
+            , Input.text [ Input.id "expected_code", Input.attrs [ value (toString check.expectedCode), onInput SetNewResponse ] ]
             ]
         , Button.button [ Button.attrs [ type_ "submit" ] ] [ text "Save" ]
         ]
@@ -276,7 +276,7 @@ view checks =
             , Grid.container [] (drawChecks checks.checks)
             ]
          ]
-            ++ drawForm checks.next_check
+            ++ drawForm checks.nextCheck
         )
 
 
