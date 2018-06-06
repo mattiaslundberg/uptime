@@ -35,6 +35,7 @@ type Msg
     | CreateCheck
     | PhxAddCheck Json.Encode.Value
     | PhxDeleteCheck Json.Encode.Value
+    | PhxUpdateCheck Json.Encode.Value
     | SetNewUrl String
     | SetNewNumber String
     | SetNewResponse String
@@ -57,7 +58,7 @@ init =
                 |> Phoenix.Socket.withDebug
                 |> Phoenix.Socket.on "create_check" "checks:ad" PhxAddCheck
                 |> Phoenix.Socket.on "remove_check" "checks:ad" PhxDeleteCheck
-                -- |> Phoenix.Socket.on "update_check" "checks:ad" PhxUpdateCheck
+                |> Phoenix.Socket.on "update_check" "checks:ad" PhxUpdateCheck
                 |> Phoenix.Socket.join channel
 
         model =
@@ -111,6 +112,26 @@ update msg checks =
             case Json.Decode.decodeValue idDecoder raw of
                 Ok data ->
                     ( { checks | checks = List.filter (\c -> c.id == data.id) checks.checks }, Cmd.none )
+
+                Err error ->
+                    Debug.log (error) ( checks, Cmd.none )
+
+        PhxUpdateCheck raw ->
+            case Json.Decode.decodeValue checkDecoder raw of
+                Ok check ->
+                    ( { checks
+                        | checks =
+                            List.map
+                                (\c ->
+                                    if c.id == check.id then
+                                        check
+                                    else
+                                        c
+                                )
+                                checks.checks
+                      }
+                    , Cmd.none
+                    )
 
                 Err error ->
                     Debug.log (error) ( checks, Cmd.none )
