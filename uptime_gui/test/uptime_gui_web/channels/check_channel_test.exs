@@ -109,6 +109,8 @@ defmodule UptimeGuiWeb.CheckChannelTest do
 
       ref = push(socket, "remove_check", %{"id" => check.id})
       assert_reply(ref, :ok, %{})
+
+      assert is_nil(Repo.get(Check, check.id))
     end
 
     test "remove non-existing check", %{socket: socket} do

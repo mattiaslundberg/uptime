@@ -52,7 +52,8 @@ defmodule UptimeGuiWeb.CheckChannel do
 
   def handle_in("remove_check", payload, socket) do
     with id when not is_nil(id) <- Map.get(payload, "id"),
-         check when not is_nil(check) <- UptimeGui.Repo.get(Check, id) do
+         check when not is_nil(check) <- Repo.get(Check, id),
+         {:ok, check} = Repo.delete(check) do
       broadcast(socket, "remove_check", %{"id" => id})
       {:reply, {:ok, %{}}, socket}
     else
