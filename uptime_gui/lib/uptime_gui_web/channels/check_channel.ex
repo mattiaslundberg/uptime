@@ -36,9 +36,10 @@ defmodule UptimeGuiWeb.CheckChannel do
 
   def handle_in("update_check", payload, socket) do
     with check when not is_nil(check) <- UptimeGui.Repo.get(Check, Map.get(payload, "id")),
-         {:ok, updated} <- UptimeGui.Repo.update(Check.changeset(check, payload)) do
-      broadcast(socket, "update_check", payload)
-      {:reply, {:ok, Check.serialize(updated)}, socket}
+         {:ok, updated} <- UptimeGui.Repo.update(Check.changeset(check, payload)),
+         serialized <- Check.serialize(updated) do
+      broadcast(socket, "update_check", serialized)
+      {:reply, {:ok, serialized}, socket}
     else
       {:error, changeset} ->
         {:reply, {:error, changeset}, socket}
