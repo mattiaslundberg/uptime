@@ -92,6 +92,18 @@ defmodule UptimeGuiWeb.CheckChannelTest do
       assert_reply(ref, :error, ^expected)
     end
 
+    test "update check without sending id", %{socket: socket} do
+      params = %{
+        "url" => "https://new.example.com"
+      }
+
+      ref = push(socket, "update_check", params)
+
+      expected = %{"msg" => "Check not found"}
+
+      assert_reply(ref, :error, ^expected)
+    end
+
     test "remove existing check", %{socket: socket} do
       {:ok, check} = insert_check()
 
@@ -101,6 +113,11 @@ defmodule UptimeGuiWeb.CheckChannelTest do
 
     test "remove non-existing check", %{socket: socket} do
       ref = push(socket, "remove_check", %{"id" => 3})
+      assert_reply(ref, :error, %{"msg" => "Check not found"})
+    end
+
+    test "remove check without sending id", %{socket: socket} do
+      ref = push(socket, "remove_check", %{})
       assert_reply(ref, :error, %{"msg" => "Check not found"})
     end
   end
