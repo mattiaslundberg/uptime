@@ -126,19 +126,7 @@ update msg checks =
         PhxUpdateCheck raw ->
             case Json.Decode.decodeValue checkDecoder raw of
                 Ok check ->
-                    ( { checks
-                        | checks =
-                            List.map
-                                (\c ->
-                                    if c.id == check.id then
-                                        check
-                                    else
-                                        c
-                                )
-                                checks.checks
-                      }
-                    , Cmd.none
-                    )
+                    ( { checks | checks = updateCheck checks.checks check }, Cmd.none )
 
                 Err error ->
                     Debug.log (error) ( checks, Cmd.none )
@@ -201,6 +189,18 @@ update msg checks =
 
                     Nothing ->
                         ( checks, Cmd.none )
+
+
+updateCheck : List Check -> Check -> List Check
+updateCheck checks check =
+    List.map
+        (\c ->
+            if c.id == check.id then
+                check
+            else
+                c
+        )
+        checks
 
 
 generateSubmitFormCommand : Check -> Phoenix.Push.Push Msg
