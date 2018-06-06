@@ -27,7 +27,7 @@ type alias Checks =
 type Msg
     = PhoenixMsg (Phoenix.Socket.Msg Msg)
     | CreateCheck
-    | AddCheck Json.Encode.Value
+    | PhxAddCheck Json.Encode.Value
 
 
 init : ( Checks, Cmd Msg )
@@ -39,9 +39,9 @@ init =
         ( initSocket, cmd ) =
             Phoenix.Socket.init "ws://localhost:4000/socket/websocket"
                 |> Phoenix.Socket.withDebug
-                |> Phoenix.Socket.on "create_check" "checks:ad" AddCheck
-                -- |> Phoenix.Socket.on "delete_check" "checks:ad" AddCheck
-                -- |> Phoenix.Socket.on "update_check" "checks:ad" AddCheck
+                |> Phoenix.Socket.on "create_check" "checks:ad" PhxAddCheck
+                -- |> Phoenix.Socket.on "delete_check" "checks:ad" PhxDeleteCheck
+                -- |> Phoenix.Socket.on "update_check" "checks:ad" PhxUpdateCheck
                 |> Phoenix.Socket.join channel
 
         model =
@@ -74,7 +74,7 @@ update msg checks =
                 , Cmd.map PhoenixMsg cmd
                 )
 
-        AddCheck raw ->
+        PhxAddCheck raw ->
             case Json.Decode.decodeValue checkDecoder raw of
                 Ok check ->
                     ( { checks | checks = check :: checks.checks }
