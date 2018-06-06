@@ -169,11 +169,8 @@ update msg checks =
 
         SubmitForm ->
             let
-                payload =
-                    (Json.Encode.object [ ( "url", Json.Encode.string checks.next_check.url ), ( "notify_number", Json.Encode.string checks.next_check.notify_number ), ( "expected_code", Json.Encode.int checks.next_check.expected_code ) ])
-
                 cmd =
-                    Phoenix.Push.init "create_check" "checks:ad" |> Phoenix.Push.withPayload payload
+                    generateSubmitFormCommand checks.next_check
 
                 ( socket, phxCmd ) =
                     Phoenix.Socket.push cmd checks.socket
@@ -204,6 +201,30 @@ update msg checks =
 
                     Nothing ->
                         ( checks, Cmd.none )
+
+
+generateSubmitFormCommand : Check -> Phoenix.Push.Push Msg
+generateSubmitFormCommand check =
+    let
+        payload =
+            Json.Encode.object (generateFormSerializer check)
+
+        command =
+            (if check.id == 0 then
+                "create_check"
+             else
+                "update_check"
+            )
+    in
+        Phoenix.Push.init command "checks:ad" |> Phoenix.Push.withPayload payload
+
+
+generateFormSerializer : Check -> List ( String, Json.Encode.Value )
+generateFormSerializer check =
+    if check.id == 0 then
+        [ ( "url", Json.Encode.string check.url ), ( "notify_number", Json.Encode.string check.notify_number ), ( "expected_code", Json.Encode.int check.expected_code ) ]
+    else
+        [ ( "id", Json.Encode.int check.id ), ( "url", Json.Encode.string check.url ), ( "notify_number", Json.Encode.string check.notify_number ), ( "expected_code", Json.Encode.int check.expected_code ) ]
 
 
 drawCheck : Check -> Html Msg
