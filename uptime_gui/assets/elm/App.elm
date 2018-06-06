@@ -118,7 +118,7 @@ update msg checks =
         PhxDeleteCheck raw ->
             case Json.Decode.decodeValue idDecoder raw of
                 Ok data ->
-                    ( { checks | checks = List.filter (\c -> c.id == data.id) checks.checks }, Cmd.none )
+                    ( { checks | checks = List.filter (\c -> c.id /= data.id) checks.checks }, Cmd.none )
 
                 Err error ->
                     Debug.log (error) ( checks, Cmd.none )
