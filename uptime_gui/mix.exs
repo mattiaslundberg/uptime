@@ -42,6 +42,7 @@ defmodule UptimeGui.Mixfile do
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
       {:mix_test_watch, "~> 0.6", only: :dev, runtime: false},
+      {:argon2_elixir, "~> 1.2"},
       {:uptime, path: "../backend"}
     ]
   end

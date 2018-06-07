@@ -17,3 +17,7 @@ config :uptime_gui, UptimeGui.Repo,
   database: "uptime_gui_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
+
+config :argon2_elixir,
+  t_cost: 1,
+  m_cost: 8
