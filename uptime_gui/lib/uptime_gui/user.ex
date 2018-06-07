@@ -28,6 +28,32 @@ defmodule UptimeGui.User do
     |> Repo.insert()
   end
 
+  def token_data(token) do
+    case Cipher.parse(token) do
+      {:ok, token_data} ->
+        {:ok, token_data}
+
+      {:error, _} ->
+        {:error, "Invalid token"}
+    end
+  end
+
+  def authenticate(credentials) do
+    case validate_credentials(credentials) do
+      {:ok, true, user} ->
+        token =
+          Cipher.cipher(%{
+            "created" => DateTime.utc_now(),
+            "user_id" => user.id
+          })
+
+        {:ok, token}
+
+      {:error, _, _} ->
+        {:error, "Invalid credentials"}
+    end
+  end
+
   def validate_credentials(provided) do
     case Repo.get_by(__MODULE__, email: provided.email) do
       user = %__MODULE__{} ->

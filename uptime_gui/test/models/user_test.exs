@@ -35,4 +35,28 @@ defmodule UptimeGui.UserTest do
       {:error, false, _} = User.validate_credentials(%User{email: "asdf", password: ""})
     end
   end
+
+  describe "authenticate/1" do
+    test "correct credentials" do
+      {:ok, _user} = User.create(@valid_attrs)
+      {:ok, _token} = User.authenticate(@valid_attrs)
+    end
+
+    test "incorrect credentials" do
+      {:ok, _user} = User.create(@valid_attrs)
+      {:error, _} = User.authenticate(Map.put(@valid_attrs, :password, "incorrect"))
+    end
+  end
+
+  describe "token_data/1" do
+    test "valid token" do
+      {:ok, %User{id: user_id}} = User.create(@valid_attrs)
+      {:ok, token} = User.authenticate(@valid_attrs)
+      {:ok, %{"user_id" => ^user_id}} = User.token_data(token)
+    end
+
+    test "invalid token" do
+      {:error, _} = User.token_data("haxxor")
+    end
+  end
 end
