@@ -12,10 +12,11 @@ defmodule UptimeGuiWeb.CheckChannelTest do
 
   test "sends checks after connection" do
     {:ok, c} = insert_check()
+    {:ok, user, token} = insert_user()
 
     {:ok, _, _socket} =
       socket("user_id", %{some: :assign})
-      |> subscribe_and_join(CheckChannel, "checks:2")
+      |> subscribe_and_join(CheckChannel, "checks:" <> to_string(user.id), %{"token" => token})
 
     expected = Check.serialize(c)
     assert_push("create_check", ^expected)
@@ -23,9 +24,11 @@ defmodule UptimeGuiWeb.CheckChannelTest do
 
   describe "handle_in/3" do
     setup do
+      {:ok, user, token} = insert_user()
+
       {:ok, _, socket} =
         socket("user_id", %{some: :assign})
-        |> subscribe_and_join(CheckChannel, "checks:2")
+        |> subscribe_and_join(CheckChannel, "checks:" <> to_string(user.id), %{"token" => token})
 
       {:ok, socket: socket}
     end

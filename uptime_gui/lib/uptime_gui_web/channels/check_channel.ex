@@ -3,7 +3,7 @@ defmodule UptimeGuiWeb.CheckChannel do
 
   require Logger
 
-  alias UptimeGui.{Check, Repo}
+  alias UptimeGui.{Check, Repo, User}
 
   def join("checks:" <> user_id, payload, socket) do
     if authorized?(user_id, payload) do
@@ -62,7 +62,14 @@ defmodule UptimeGuiWeb.CheckChannel do
     end
   end
 
-  defp authorized?(_user_id, _payload) do
-    true
+  defp authorized?(user_id_str, payload) do
+    with {user_id, ""} <- Integer.parse(user_id_str),
+         token <- Map.get(payload, "token", ""),
+         {:ok, %{"user_id" => ^user_id}} <- User.token_data(token) do
+      true
+    else
+      e ->
+        false
+    end
   end
 end

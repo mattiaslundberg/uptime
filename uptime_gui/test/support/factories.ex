@@ -12,4 +12,18 @@ defmodule UptimeGui.Factories do
     )
     |> Repo.insert()
   end
+
+  def insert_user(opts \\ []) do
+    password = Keyword.get(opts, :password, "password")
+
+    {:ok, user} =
+      UptimeGui.User.changeset(%UptimeGui.User{}, %{
+        email: Keyword.get(opts, :email, "test@example.com"),
+        password: Argon2.hash_pwd_salt(password)
+      })
+      |> Repo.insert()
+
+    {:ok, token} = UptimeGui.User.authenticate(user.id, %{email: user.email, password: password})
+    {:ok, user, token}
+  end
 end
