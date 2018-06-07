@@ -31,7 +31,7 @@ type alias Check =
     }
 
 
-type alias Checks =
+type alias Model =
     { socket : Phoenix.Socket.Socket Msg
     , checks : List Check
     , nextCheck : Check
@@ -56,7 +56,7 @@ newNextCheck =
     Check 0 "" "" 200
 
 
-init : ( Checks, Cmd Msg )
+init : ( Model, Cmd Msg )
 init =
     let
         channel =
@@ -94,78 +94,78 @@ checkDecoder =
         (field "expected_code" Json.Decode.int)
 
 
-update : Msg -> Checks -> ( Checks, Cmd Msg )
-update msg checks =
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
     case msg of
         PhoenixMsg msg ->
             let
                 ( socket, cmd ) =
-                    Phoenix.Socket.update msg checks.socket
+                    Phoenix.Socket.update msg model.socket
             in
-                ( { checks | socket = socket }
+                ( { model | socket = socket }
                 , Cmd.map PhoenixMsg cmd
                 )
 
         PhxAddCheck raw ->
             case Json.Decode.decodeValue checkDecoder raw of
                 Ok check ->
-                    ( { checks | checks = check :: checks.checks }
+                    ( { model | checks = check :: model.checks }
                     , Cmd.none
                     )
 
                 Err error ->
                     Debug.log (error)
-                        ( checks, Cmd.none )
+                        ( model, Cmd.none )
 
         PhxDeleteCheck raw ->
             case Json.Decode.decodeValue idDecoder raw of
                 Ok data ->
-                    ( { checks | checks = List.filter (\c -> c.id /= data.id) checks.checks }, Cmd.none )
+                    ( { model | checks = List.filter (\c -> c.id /= data.id) model.checks }, Cmd.none )
 
                 Err error ->
-                    Debug.log (error) ( checks, Cmd.none )
+                    Debug.log (error) ( model, Cmd.none )
 
         PhxUpdateCheck raw ->
             case Json.Decode.decodeValue checkDecoder raw of
                 Ok check ->
-                    ( { checks | checks = updateCheck checks.checks check }, Cmd.none )
+                    ( { model | checks = updateCheck model.checks check }, Cmd.none )
 
                 Err error ->
-                    Debug.log (error) ( checks, Cmd.none )
+                    Debug.log (error) ( model, Cmd.none )
 
         SetNewUrl str ->
             let
                 current =
-                    checks.nextCheck
+                    model.nextCheck
             in
-                ( { checks | nextCheck = { current | url = str } }, Cmd.none )
+                ( { model | nextCheck = { current | url = str } }, Cmd.none )
 
         SetNewNumber str ->
             let
                 current =
-                    checks.nextCheck
+                    model.nextCheck
             in
-                ( { checks | nextCheck = { current | notifyNumber = str } }, Cmd.none )
+                ( { model | nextCheck = { current | notifyNumber = str } }, Cmd.none )
 
         SetNewResponse str ->
             let
                 current =
-                    checks.nextCheck
+                    model.nextCheck
 
                 newValue =
-                    Result.withDefault checks.nextCheck.expectedCode (String.toInt str)
+                    Result.withDefault model.nextCheck.expectedCode (String.toInt str)
             in
-                ( { checks | nextCheck = { current | expectedCode = newValue } }, Cmd.none )
+                ( { model | nextCheck = { current | expectedCode = newValue } }, Cmd.none )
 
         SubmitForm ->
             let
                 cmd =
-                    generateSubmitFormCommand checks.nextCheck
+                    generateSubmitFormCommand model.nextCheck
 
                 ( socket, phxCmd ) =
-                    Phoenix.Socket.push cmd checks.socket
+                    Phoenix.Socket.push cmd model.socket
             in
-                ( { checks | socket = socket, nextCheck = newNextCheck }, Cmd.map PhoenixMsg phxCmd )
+                ( { model | socket = socket, nextCheck = newNextCheck }, Cmd.map PhoenixMsg phxCmd )
 
         DeleteCheck checkId ->
             let
@@ -176,21 +176,21 @@ update msg checks =
                     Phoenix.Push.init "remove_check" "checks:ad" |> Phoenix.Push.withPayload payload
 
                 ( socket, phxCmd ) =
-                    Phoenix.Socket.push cmd checks.socket
+                    Phoenix.Socket.push cmd model.socket
             in
-                ( { checks | socket = socket }, Cmd.map PhoenixMsg phxCmd )
+                ( { model | socket = socket }, Cmd.map PhoenixMsg phxCmd )
 
         EditCheck checkId ->
             let
                 check =
-                    find (\c -> c.id == checkId) checks.checks
+                    find (\c -> c.id == checkId) model.checks
             in
                 case check of
                     Just check ->
-                        ( { checks | nextCheck = check }, Cmd.none )
+                        ( { model | nextCheck = check }, Cmd.none )
 
                     Nothing ->
-                        ( checks, Cmd.none )
+                        ( model, Cmd.none )
 
 
 updateCheck : List Check -> Check -> List Check
@@ -248,7 +248,7 @@ drawCheck check =
 
 
 drawChecks : List Check -> Html Msg
-drawChecks checks =
+drawChecks model =
     Table.simpleTable
         ( Table.simpleThead
             [ Table.th [] [ text "Url" ]
@@ -257,7 +257,7 @@ drawChecks checks =
             , Table.th [] [ text "Actions" ]
             ]
         , Table.tbody []
-            (checks
+            (model
                 |> List.map drawCheck
             )
         )
@@ -296,8 +296,8 @@ drawForm check =
     ]
 
 
-view : Checks -> Html Msg
-view checks =
+view : Model -> Html Msg
+view model =
     div []
         ([ div []
             [ CDN.stylesheet
@@ -307,20 +307,20 @@ view checks =
                  , Grid.row [] [ Grid.col [] [ h2 [ class "text-center" ] [ text "Active checks" ] ] ]
                  , Grid.row [] [ Grid.col [] [ text " " ] ]
                  ]
-                    ++ [ drawChecks checks.checks ]
+                    ++ [ drawChecks model.checks ]
                 )
             ]
          ]
-            ++ drawForm checks.nextCheck
+            ++ drawForm model.nextCheck
         )
 
 
-subscriptions : Checks -> Sub Msg
-subscriptions checks =
-    Phoenix.Socket.listen checks.socket PhoenixMsg
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Phoenix.Socket.listen model.socket PhoenixMsg
 
 
-main : Program Never Checks Msg
+main : Program Never Model Msg
 main =
     Html.program
         { init = init
