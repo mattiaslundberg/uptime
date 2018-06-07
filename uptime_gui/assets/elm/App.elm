@@ -7,6 +7,7 @@ import Bootstrap.Grid as Grid
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form as Form
 import Bootstrap.Button as Button
+import Bootstrap.ButtonGroup as ButtonGroup
 import Json.Decode exposing (field)
 import Html exposing (Html, li, text, div, ul, form, label, input, button, span, h1, h2)
 import Html.Attributes exposing (value, for, type_, class)
@@ -235,11 +236,13 @@ drawCheck check =
         , Table.td [] [ text check.notifyNumber ]
         , Table.td [] [ text (toString check.expectedCode) ]
         , Table.td []
-            [ Button.button [ Button.attrs [ onClick (EditCheck check.id) ] ]
-                [ text "Edit" ]
-            , Button.button
-                [ Button.attrs [ onClick (DeleteCheck check.id) ] ]
-                [ text "Delete" ]
+            [ ButtonGroup.buttonGroup []
+                [ ButtonGroup.button [ Button.attrs [ onClick (EditCheck check.id) ] ]
+                    [ text "🖋️" ]
+                , ButtonGroup.button
+                    [ Button.attrs [ onClick (DeleteCheck check.id) ] ]
+                    [ text "❌" ]
+                ]
             ]
         ]
 
