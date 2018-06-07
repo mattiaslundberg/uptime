@@ -20,16 +20,18 @@ defmodule UptimeGui.User do
     |> validate_required([:email, :password])
   end
 
-  def create(%{email: email, password: password}) do
+  def create(params = %{password: password}) do
+    params = Map.put(params, :password, Argon2.hash_pwd_salt(password))
+
     %__MODULE__{}
-    |> changeset(%{email: email, password: Argon2.hash_pwd_salt(password)})
+    |> changeset(params)
     |> Repo.insert()
   end
 
-  def validate_credentials(%{email: email, password: password}) do
-    case Repo.get_by(__MODULE__, email: email) do
+  def validate_credentials(provided) do
+    case Repo.get_by(__MODULE__, email: provided.email) do
       user = %__MODULE__{} ->
-        Argon2.verify_pass(password, user.password)
+        Argon2.verify_pass(provided.password, user.password)
 
       nil ->
         Argon2.verify_pass("", @dummy_hash)
