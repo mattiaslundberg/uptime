@@ -16,6 +16,11 @@ config :uptime_gui, UptimeGuiWeb.Endpoint,
   render_errors: [view: UptimeGuiWeb.ErrorView, accepts: ~w(html json)],
   pubsub: [name: UptimeGui.PubSub, adapter: Phoenix.PubSub.PG2]
 
+config :cipher,
+  keyphrase: "Iozee9aeYu5ooJ9ahchi",
+  ivphrase: "ech4eiwaelahshahX3ki",
+  magic_token: "yikae5phoh2ahthai0Si"
+
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",

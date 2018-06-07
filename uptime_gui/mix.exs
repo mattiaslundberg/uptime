@@ -43,6 +43,7 @@ defmodule UptimeGui.Mixfile do
       {:cowboy, "~> 1.0"},
       {:mix_test_watch, "~> 0.6", only: :dev, runtime: false},
       {:argon2_elixir, "~> 1.2"},
+      {:cipher, ">= 1.3.4"},
       {:uptime, path: "../backend"}
     ]
   end
