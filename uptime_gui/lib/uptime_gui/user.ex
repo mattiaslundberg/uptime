@@ -31,10 +31,14 @@ defmodule UptimeGui.User do
   def validate_credentials(provided) do
     case Repo.get_by(__MODULE__, email: provided.email) do
       user = %__MODULE__{} ->
-        Argon2.verify_pass(provided.password, user.password)
+        if Argon2.verify_pass(provided.password, user.password) do
+          {:ok, true, user}
+        else
+          {:error, false, %{}}
+        end
 
       nil ->
-        Argon2.verify_pass("", @dummy_hash)
+        {:error, Argon2.verify_pass("", @dummy_hash), %{}}
     end
   end
 end
