@@ -33,6 +33,7 @@ type alias Check =
 
 type alias Model =
     { socket : Phoenix.Socket.Socket Msg
+    , token : String
     , checks : List Check
     , nextCheck : Check
     }
@@ -59,19 +60,25 @@ newNextCheck =
 init : ( Model, Cmd Msg )
 init =
     let
+        -- FIXME: Get token from localstorage
+        token =
+            "4SlMa4K%2FsJdt4810c8%2FbJhU0z7Ur0fqC4eNQR1nwDnujMa64Qvhibbs1HMACETwatZXHT0cjW%2FTNfBj06c5g2g%3D%3D"
+
         channel =
-            Phoenix.Channel.init "checks:ad"
+            Phoenix.Channel.init "checks:1"
+                |> Phoenix.Channel.withPayload (Json.Encode.object [ ( "token", Json.Encode.string token ) ])
 
         ( initSocket, cmd ) =
             Phoenix.Socket.init "ws://localhost:4000/socket/websocket"
                 |> Phoenix.Socket.withDebug
-                |> Phoenix.Socket.on "create_check" "checks:ad" PhxAddCheck
-                |> Phoenix.Socket.on "remove_check" "checks:ad" PhxDeleteCheck
-                |> Phoenix.Socket.on "update_check" "checks:ad" PhxUpdateCheck
+                |> Phoenix.Socket.on "create_check" "checks:1" PhxAddCheck
+                |> Phoenix.Socket.on "remove_check" "checks:1" PhxDeleteCheck
+                |> Phoenix.Socket.on "update_check" "checks:1" PhxUpdateCheck
                 |> Phoenix.Socket.join channel
 
         model =
             { socket = initSocket
+            , token = token
             , checks = []
             , nextCheck = newNextCheck
             }
@@ -173,7 +180,7 @@ update msg model =
                     (Json.Encode.object [ ( "id", Json.Encode.int checkId ) ])
 
                 cmd =
-                    Phoenix.Push.init "remove_check" "checks:ad" |> Phoenix.Push.withPayload payload
+                    Phoenix.Push.init "remove_check" "checks:1" |> Phoenix.Push.withPayload payload
 
                 ( socket, phxCmd ) =
                     Phoenix.Socket.push cmd model.socket
@@ -218,7 +225,7 @@ generateSubmitFormCommand check =
                 "update_check"
             )
     in
-        Phoenix.Push.init command "checks:ad" |> Phoenix.Push.withPayload payload
+        Phoenix.Push.init command "checks:1" |> Phoenix.Push.withPayload payload
 
 
 generateFormSerializer : Check -> List ( String, Json.Encode.Value )
