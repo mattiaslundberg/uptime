@@ -34,6 +34,7 @@ type alias Check =
 type alias Model =
     { socket : Phoenix.Socket.Socket Msg
     , token : String
+    , userId : Int
     , checks : List Check
     , nextCheck : Check
     }
@@ -60,30 +61,39 @@ newNextCheck =
 init : ( Model, Cmd Msg )
 init =
     let
-        -- FIXME: Get token from localstorage
+        -- FIXME: Get token and userId from localstorage
         token =
             "4SlMa4K%2FsJdt4810c8%2FbJhU0z7Ur0fqC4eNQR1nwDnujMa64Qvhibbs1HMACETwatZXHT0cjW%2FTNfBj06c5g2g%3D%3D"
 
+        userId =
+            1
+
         channel =
-            Phoenix.Channel.init "checks:1"
+            Phoenix.Channel.init (channelName userId)
                 |> Phoenix.Channel.withPayload (Json.Encode.object [ ( "token", Json.Encode.string token ) ])
 
         ( initSocket, cmd ) =
             Phoenix.Socket.init "ws://localhost:4000/socket/websocket"
                 |> Phoenix.Socket.withDebug
-                |> Phoenix.Socket.on "create_check" "checks:1" PhxAddCheck
-                |> Phoenix.Socket.on "remove_check" "checks:1" PhxDeleteCheck
-                |> Phoenix.Socket.on "update_check" "checks:1" PhxUpdateCheck
+                |> Phoenix.Socket.on "create_check" (channelName userId) PhxAddCheck
+                |> Phoenix.Socket.on "remove_check" (channelName userId) PhxDeleteCheck
+                |> Phoenix.Socket.on "update_check" (channelName userId) PhxUpdateCheck
                 |> Phoenix.Socket.join channel
 
         model =
             { socket = initSocket
             , token = token
+            , userId = userId
             , checks = []
             , nextCheck = newNextCheck
             }
     in
         ( model, Cmd.map PhoenixMsg cmd )
+
+
+channelName : Int -> String
+channelName userId =
+    "checks:" ++ toString userId
 
 
 idDecoder : Json.Decode.Decoder Id
@@ -167,7 +177,7 @@ update msg model =
         SubmitForm ->
             let
                 cmd =
-                    generateSubmitFormCommand model.nextCheck
+                    generateSubmitFormCommand model.userId model.nextCheck
 
                 ( socket, phxCmd ) =
                     Phoenix.Socket.push cmd model.socket
@@ -180,7 +190,7 @@ update msg model =
                     (Json.Encode.object [ ( "id", Json.Encode.int checkId ) ])
 
                 cmd =
-                    Phoenix.Push.init "remove_check" "checks:1" |> Phoenix.Push.withPayload payload
+                    Phoenix.Push.init "remove_check" (channelName model.userId) |> Phoenix.Push.withPayload payload
 
                 ( socket, phxCmd ) =
                     Phoenix.Socket.push cmd model.socket
@@ -212,8 +222,8 @@ updateCheck checks check =
         checks
 
 
-generateSubmitFormCommand : Check -> Phoenix.Push.Push Msg
-generateSubmitFormCommand check =
+generateSubmitFormCommand : Int -> Check -> Phoenix.Push.Push Msg
+generateSubmitFormCommand userId check =
     let
         payload =
             Json.Encode.object (generateFormSerializer check)
@@ -225,7 +235,7 @@ generateSubmitFormCommand check =
                 "update_check"
             )
     in
-        Phoenix.Push.init command "checks:1" |> Phoenix.Push.withPayload payload
+        Phoenix.Push.init command (channelName userId) |> Phoenix.Push.withPayload payload
 
 
 generateFormSerializer : Check -> List ( String, Json.Encode.Value )
