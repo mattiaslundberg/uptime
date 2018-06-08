@@ -68,7 +68,7 @@ defmodule UptimeGuiWeb.CheckChannel do
          {:ok, %{"user_id" => ^user_id}} <- User.token_data(token) do
       true
     else
-      e ->
+      _ ->
         false
     end
   end
