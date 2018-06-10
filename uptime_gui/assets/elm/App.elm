@@ -130,6 +130,15 @@ updateSocket msg model =
         ( { model | connection = { conn | socket = socket } }, Cmd.map PhoenixMsg cmd )
 
 
+push : Phoenix.Push.Push Msg -> Connection -> ( Connection, Cmd Msg )
+push cmd conn =
+    let
+        ( socket, phxCmd ) =
+            Phoenix.Socket.push cmd conn.socket
+    in
+        ( { conn | socket = socket }, Cmd.map PhoenixMsg phxCmd )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -189,16 +198,10 @@ update msg model =
 
         SubmitForm ->
             let
-                cmd =
-                    generateSubmitFormCommand model.connection.userId model.nextCheck
-
-                ( socket, phxCmd ) =
-                    Phoenix.Socket.push cmd model.connection.socket
-
-                connection =
-                    model.connection
+                ( conn, phxCmds ) =
+                    push (generateSubmitFormCommand model.connection.userId model.nextCheck) model.connection
             in
-                ( { model | connection = { connection | socket = socket }, nextCheck = newNextCheck }, Cmd.map PhoenixMsg phxCmd )
+                ( { model | connection = conn, nextCheck = newNextCheck }, phxCmds )
 
         DeleteCheck checkId ->
             let
@@ -208,13 +211,10 @@ update msg model =
                 cmd =
                     Phoenix.Push.init "remove_check" (channelName model.connection.userId) |> Phoenix.Push.withPayload payload
 
-                ( socket, phxCmd ) =
-                    Phoenix.Socket.push cmd model.connection.socket
-
-                connection =
-                    model.connection
+                ( conn, phxCmds ) =
+                    push cmd model.connection
             in
-                ( { model | connection = { connection | socket = socket } }, Cmd.map PhoenixMsg phxCmd )
+                ( { model | connection = conn }, phxCmds )
 
         EditCheck checkId ->
             let
