@@ -24,9 +24,11 @@ const elmDiv = document.getElementById('elm-main');
 const elmApp = Elm.App.embed(elmDiv);
 
 elmApp.ports.getToken.subscribe(() => {
-  const token = "4SlMa4K%2FsJdt4810c8%2FbJhU0z7Ur0fqC4eNQR1nwDnujMa64Qvhibbs1HMACETwatZXHT0cjW%2FTNfBj06c5g2g%3D%3D"
+  const token = localStorage.getItem("uptime-token")
+  const userId = localStorage.getItem("uptime-userId")
+
   elmApp.ports.jsGetToken.send({
     token: token,
-    userId: 1,
+    userId: +userId,
   })
 })
