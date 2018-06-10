@@ -1,5 +1,6 @@
 module App exposing (..)
 
+import Ports exposing (..)
 import Json.Encode
 import Bootstrap.Table as Table
 import Bootstrap.CDN as CDN
@@ -56,6 +57,7 @@ type Msg
     | SetNewResponse String
     | DeleteCheck Int
     | EditCheck Int
+    | GotToken String
 
 
 newNextCheck : Check
@@ -82,7 +84,7 @@ init =
             , nextCheck = newNextCheck
             }
     in
-        ( model, cmd )
+        ( model, Cmd.batch [ cmd, getToken "" ] )
 
 
 initConnection : Int -> String -> ( Connection, Cmd Msg )
@@ -163,6 +165,9 @@ update msg model =
     case msg of
         PhoenixMsg msg ->
             updateSocket msg model
+
+        GotToken token ->
+            ( model, Cmd.none )
 
         PhxAddCheck raw ->
             case Json.Decode.decodeValue checkDecoder raw of
@@ -364,10 +369,13 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     case model.connection of
         Just conn ->
-            Phoenix.Socket.listen conn.socket PhoenixMsg
+            Sub.batch
+                [ Phoenix.Socket.listen conn.socket PhoenixMsg
+                , jsGetToken GotToken
+                ]
 
         Nothing ->
-            Sub.none
+            jsGetToken GotToken
 
 
 main : Program Never Model Msg

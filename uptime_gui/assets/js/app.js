@@ -22,3 +22,8 @@ import "phoenix_html"
 
 const elmDiv = document.getElementById('elm-main');
 const elmApp = Elm.App.embed(elmDiv);
+
+elmApp.ports.getToken.subscribe(() => {
+  const token = "4SlMa4K%2FsJdt4810c8%2FbJhU0z7Ur0fqC4eNQR1nwDnujMa64Qvhibbs1HMACETwatZXHT0cjW%2FTNfBj06c5g2g%3D%3D"
+  elmApp.ports.jsGetToken.send(token)
+})
