@@ -32,7 +32,7 @@ type alias Check =
 
 
 type alias Model =
-    { connection : Connection
+    { connection : Maybe Connection
     , checks : List Check
     , nextCheck : Check
     }
@@ -73,6 +73,21 @@ init =
         userId =
             1
 
+        ( conn, cmd ) =
+            initConnection userId token
+
+        model =
+            { connection = Just conn
+            , checks = []
+            , nextCheck = newNextCheck
+            }
+    in
+        ( model, cmd )
+
+
+initConnection : Int -> String -> ( Connection, Cmd Msg )
+initConnection userId token =
+    let
         channel =
             Phoenix.Channel.init (channelName userId)
                 |> Phoenix.Channel.withPayload (Json.Encode.object [ ( "token", Json.Encode.string token ) ])
@@ -85,17 +100,8 @@ init =
                 |> Phoenix.Socket.on "remove_check" (channelName userId) PhxDeleteCheck
                 |> Phoenix.Socket.on "update_check" (channelName userId) PhxUpdateCheck
                 |> Phoenix.Socket.join channel
-
-        connection =
-            { socket = initSocket, token = token, userId = userId }
-
-        model =
-            { connection = connection
-            , checks = []
-            , nextCheck = newNextCheck
-            }
     in
-        ( model, Cmd.map PhoenixMsg cmd )
+        ( { socket = initSocket, token = token, userId = userId }, Cmd.map PhoenixMsg cmd )
 
 
 channelName : Int -> String
@@ -120,14 +126,16 @@ checkDecoder =
 
 updateSocket : Phoenix.Socket.Msg Msg -> Model -> ( Model, Cmd Msg )
 updateSocket msg model =
-    let
-        conn =
-            model.connection
+    case model.connection of
+        Just conn ->
+            let
+                ( socket, cmd ) =
+                    Phoenix.Socket.update msg conn.socket
+            in
+                ( { model | connection = Just { conn | socket = socket } }, Cmd.map PhoenixMsg cmd )
 
-        ( socket, cmd ) =
-            Phoenix.Socket.update msg conn.socket
-    in
-        ( { model | connection = { conn | socket = socket } }, Cmd.map PhoenixMsg cmd )
+        Nothing ->
+            ( model, Cmd.none )
 
 
 push : String -> Json.Encode.Value -> Connection -> ( Connection, Cmd Msg )
@@ -208,24 +216,34 @@ update msg model =
                 ( { model | nextCheck = { current | expectedCode = newValue } }, Cmd.none )
 
         SubmitForm ->
-            let
-                payload =
-                    Json.Encode.object (generateFormSerializer model.nextCheck)
+            case model.connection of
+                Just conn ->
+                    let
+                        payload =
+                            Json.Encode.object (generateFormSerializer model.nextCheck)
 
-                ( conn, phxCmds ) =
-                    push (getSubmitCommand model.nextCheck) payload model.connection
-            in
-                ( { model | connection = conn, nextCheck = newNextCheck }, phxCmds )
+                        ( newConn, phxCmds ) =
+                            push (getSubmitCommand model.nextCheck) payload conn
+                    in
+                        ( { model | connection = Just newConn, nextCheck = newNextCheck }, phxCmds )
+
+                Nothing ->
+                    ( model, Cmd.none )
 
         DeleteCheck checkId ->
-            let
-                payload =
-                    (Json.Encode.object [ ( "id", Json.Encode.int checkId ) ])
+            case model.connection of
+                Just conn ->
+                    let
+                        payload =
+                            (Json.Encode.object [ ( "id", Json.Encode.int checkId ) ])
 
-                ( conn, phxCmds ) =
-                    push "remove_check" payload model.connection
-            in
-                ( { model | connection = conn }, phxCmds )
+                        ( nextConn, phxCmds ) =
+                            push "remove_check" payload conn
+                    in
+                        ( { model | connection = Just nextConn }, phxCmds )
+
+                Nothing ->
+                    ( model, Cmd.none )
 
         EditCheck checkId ->
             let
@@ -344,7 +362,12 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Phoenix.Socket.listen model.connection.socket PhoenixMsg
+    case model.connection of
+        Just conn ->
+            Phoenix.Socket.listen conn.socket PhoenixMsg
+
+        Nothing ->
+            Sub.none
 
 
 main : Program Never Model Msg
