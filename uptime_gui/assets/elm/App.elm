@@ -18,6 +18,7 @@ import List.Extra exposing (find)
 import Phoenix.Socket
 import Phoenix.Channel
 import Phoenix.Push
+import Models exposing (ConnData)
 
 
 type alias Id =
@@ -57,7 +58,7 @@ type Msg
     | SetNewResponse String
     | DeleteCheck Int
     | EditCheck Int
-    | GotToken String
+    | GotToken ConnData
 
 
 newNextCheck : Check
@@ -68,28 +69,24 @@ newNextCheck =
 init : ( Model, Cmd Msg )
 init =
     let
-        -- FIXME: Get token and userId from localstorage
-        token =
-            "4SlMa4K%2FsJdt4810c8%2FbJhU0z7Ur0fqC4eNQR1nwDnujMa64Qvhibbs1HMACETwatZXHT0cjW%2FTNfBj06c5g2g%3D%3D"
-
-        userId =
-            1
-
-        ( conn, cmd ) =
-            initConnection userId token
-
         model =
-            { connection = Just conn
+            { connection = Nothing
             , checks = []
             , nextCheck = newNextCheck
             }
     in
-        ( model, Cmd.batch [ cmd, getToken "" ] )
+        ( model, getToken "" )
 
 
-initConnection : Int -> String -> ( Connection, Cmd Msg )
-initConnection userId token =
+initConnection : ConnData -> ( Connection, Cmd Msg )
+initConnection connData =
     let
+        userId =
+            connData.userId
+
+        token =
+            connData.token
+
         channel =
             Phoenix.Channel.init (channelName userId)
                 |> Phoenix.Channel.withPayload (Json.Encode.object [ ( "token", Json.Encode.string token ) ])
@@ -124,6 +121,13 @@ checkDecoder =
         (field "url" Json.Decode.string)
         (field "notify_number" Json.Decode.string)
         (field "expected_code" Json.Decode.int)
+
+
+connDecoder : Json.Decode.Decoder ConnData
+connDecoder =
+    Json.Decode.map2 ConnData
+        (field "token" Json.Decode.string)
+        (field "userId" Json.Decode.int)
 
 
 updateSocket : Phoenix.Socket.Msg Msg -> Model -> ( Model, Cmd Msg )
@@ -166,8 +170,12 @@ update msg model =
         PhoenixMsg msg ->
             updateSocket msg model
 
-        GotToken token ->
-            ( model, Cmd.none )
+        GotToken connData ->
+            let
+                ( conn, cmd ) =
+                    initConnection connData
+            in
+                ( { model | connection = Just conn }, cmd )
 
         PhxAddCheck raw ->
             case Json.Decode.decodeValue checkDecoder raw of
