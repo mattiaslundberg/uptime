@@ -219,14 +219,9 @@ update msg model =
         EditCheck checkId ->
             let
                 check =
-                    find (\c -> c.id == checkId) model.checks
+                    Maybe.withDefault model.nextCheck (find (\c -> c.id == checkId) model.checks)
             in
-                case check of
-                    Just check ->
-                        ( { model | nextCheck = check }, Cmd.none )
-
-                    Nothing ->
-                        ( model, Cmd.none )
+                ( { model | nextCheck = check }, Cmd.none )
 
 
 updateCheck : List Check -> Check -> List Check
