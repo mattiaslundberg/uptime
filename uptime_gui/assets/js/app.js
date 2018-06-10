@@ -27,8 +27,12 @@ elmApp.ports.getToken.subscribe(() => {
   const token = localStorage.getItem("uptime-token")
   const userId = localStorage.getItem("uptime-userId")
 
-  elmApp.ports.jsGetToken.send({
-    token: token,
-    userId: +userId,
-  })
+  if (token && userId) {
+    elmApp.ports.jsGetToken.send({
+      token: token,
+      userId: +userId,
+    })
+  } else {
+    elmApp.ports.jsPromptAuth.send(true)
+  }
 })

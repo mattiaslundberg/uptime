@@ -35,6 +35,7 @@ type alias Check =
 
 type alias Model =
     { connection : Maybe Connection
+    , authRequired : Bool
     , checks : List Check
     , nextCheck : Check
     }
@@ -56,9 +57,13 @@ type Msg
     | SetNewUrl String
     | SetNewNumber String
     | SetNewResponse String
+    | SetNewUserName String
+    | SetNewPassword String
+    | SubmitAuthForm
     | DeleteCheck Int
     | EditCheck Int
     | GotToken ConnData
+    | PromptAuth Bool
 
 
 newNextCheck : Check
@@ -71,6 +76,7 @@ init =
     let
         model =
             { connection = Nothing
+            , authRequired = False
             , checks = []
             , nextCheck = newNextCheck
             }
@@ -177,6 +183,9 @@ update msg model =
             in
                 ( { model | connection = Just conn }, cmd )
 
+        PromptAuth required ->
+            ( { model | authRequired = required }, Cmd.none )
+
         PhxAddCheck raw ->
             case Json.Decode.decodeValue checkDecoder raw of
                 Ok check ->
@@ -242,6 +251,15 @@ update msg model =
 
                 Nothing ->
                     ( model, Cmd.none )
+
+        SetNewUserName str ->
+            ( model, Cmd.none )
+
+        SetNewPassword str ->
+            ( model, Cmd.none )
+
+        SubmitAuthForm ->
+            ( model, Cmd.none )
 
         DeleteCheck checkId ->
             case model.connection of
@@ -354,8 +372,8 @@ drawForm check =
     ]
 
 
-view : Model -> Html Msg
-view model =
+drawAuthenticated : Model -> Html Msg
+drawAuthenticated model =
     div []
         ([ div []
             [ CDN.stylesheet
@@ -373,6 +391,35 @@ view model =
         )
 
 
+drawAuthForm : Model -> Html Msg
+drawAuthForm model =
+    div []
+        [ div []
+            [ CDN.stylesheet
+            , Form.form
+                [ onSubmit SubmitAuthForm ]
+                [ Form.group []
+                    [ Form.label [ for "user" ] [ text "Username" ]
+                    , Input.text [ Input.id "user", Input.attrs [ onInput SetNewUserName ] ]
+                    ]
+                , Form.group []
+                    [ Form.label [ for "password" ] [ text "Password" ]
+                    , Input.text [ Input.id "password", Input.attrs [ type_ "password", onInput SetNewPassword ] ]
+                    ]
+                , Button.button [ Button.attrs [ type_ "submit", class "float-right" ] ] [ text "Login" ]
+                ]
+            ]
+        ]
+
+
+view : Model -> Html Msg
+view model =
+    if model.authRequired then
+        drawAuthForm model
+    else
+        drawAuthenticated model
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
     case model.connection of
@@ -380,10 +427,14 @@ subscriptions model =
             Sub.batch
                 [ Phoenix.Socket.listen conn.socket PhoenixMsg
                 , jsGetToken GotToken
+                , jsPromptAuth PromptAuth
                 ]
 
         Nothing ->
-            jsGetToken GotToken
+            Sub.batch
+                [ jsGetToken GotToken
+                , jsPromptAuth PromptAuth
+                ]
 
 
 main : Program Never Model Msg
