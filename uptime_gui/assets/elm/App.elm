@@ -231,14 +231,15 @@ update msg model =
 
 updateCheck : List Check -> Check -> List Check
 updateCheck checks check =
-    List.map
-        (\c ->
-            if c.id == check.id then
-                check
-            else
-                c
-        )
-        checks
+    List.map (updateIfMatch check) checks
+
+
+updateIfMatch : Check -> Check -> Check
+updateIfMatch candidate current =
+    if current.id == candidate.id then
+        candidate
+    else
+        current
 
 
 generateSubmitFormCommand : Int -> Check -> Phoenix.Push.Push Msg
