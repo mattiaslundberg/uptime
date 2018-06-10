@@ -32,11 +32,16 @@ type alias Check =
 
 
 type alias Model =
+    { connection : Connection
+    , checks : List Check
+    , nextCheck : Check
+    }
+
+
+type alias Connection =
     { socket : Phoenix.Socket.Socket Msg
     , token : String
     , userId : Int
-    , checks : List Check
-    , nextCheck : Check
     }
 
 
@@ -81,10 +86,11 @@ init =
                 |> Phoenix.Socket.on "update_check" (channelName userId) PhxUpdateCheck
                 |> Phoenix.Socket.join channel
 
+        connection =
+            { socket = initSocket, token = token, userId = userId }
+
         model =
-            { socket = initSocket
-            , token = token
-            , userId = userId
+            { connection = connection
             , checks = []
             , nextCheck = newNextCheck
             }
@@ -118,9 +124,12 @@ update msg model =
         PhoenixMsg msg ->
             let
                 ( socket, cmd ) =
-                    Phoenix.Socket.update msg model.socket
+                    Phoenix.Socket.update msg model.connection.socket
+
+                connection =
+                    model.connection
             in
-                ( { model | socket = socket }
+                ( { model | connection = { connection | socket = socket } }
                 , Cmd.map PhoenixMsg cmd
                 )
 
@@ -178,12 +187,15 @@ update msg model =
         SubmitForm ->
             let
                 cmd =
-                    generateSubmitFormCommand model.userId model.nextCheck
+                    generateSubmitFormCommand model.connection.userId model.nextCheck
 
                 ( socket, phxCmd ) =
-                    Phoenix.Socket.push cmd model.socket
+                    Phoenix.Socket.push cmd model.connection.socket
+
+                connection =
+                    model.connection
             in
-                ( { model | socket = socket, nextCheck = newNextCheck }, Cmd.map PhoenixMsg phxCmd )
+                ( { model | connection = { connection | socket = socket }, nextCheck = newNextCheck }, Cmd.map PhoenixMsg phxCmd )
 
         DeleteCheck checkId ->
             let
@@ -191,12 +203,15 @@ update msg model =
                     (Json.Encode.object [ ( "id", Json.Encode.int checkId ) ])
 
                 cmd =
-                    Phoenix.Push.init "remove_check" (channelName model.userId) |> Phoenix.Push.withPayload payload
+                    Phoenix.Push.init "remove_check" (channelName model.connection.userId) |> Phoenix.Push.withPayload payload
 
                 ( socket, phxCmd ) =
-                    Phoenix.Socket.push cmd model.socket
+                    Phoenix.Socket.push cmd model.connection.socket
+
+                connection =
+                    model.connection
             in
-                ( { model | socket = socket }, Cmd.map PhoenixMsg phxCmd )
+                ( { model | connection = { connection | socket = socket } }, Cmd.map PhoenixMsg phxCmd )
 
         EditCheck checkId ->
             let
@@ -335,7 +350,7 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Phoenix.Socket.listen model.socket PhoenixMsg
+    Phoenix.Socket.listen model.connection.socket PhoenixMsg
 
 
 main : Program Never Model Msg
