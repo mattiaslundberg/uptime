@@ -74,6 +74,7 @@ init =
 
         ( initSocket, cmd ) =
             Phoenix.Socket.init "ws://localhost:4000/socket/websocket"
+                -- FIXME: Get from js?
                 |> Phoenix.Socket.withDebug
                 |> Phoenix.Socket.on "create_check" (channelName userId) PhxAddCheck
                 |> Phoenix.Socket.on "remove_check" (channelName userId) PhxDeleteCheck
