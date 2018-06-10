@@ -118,20 +118,23 @@ checkDecoder =
         (field "expected_code" Json.Decode.int)
 
 
+updateSocket : Phoenix.Socket.Msg Msg -> Model -> ( Model, Cmd Msg )
+updateSocket msg model =
+    let
+        conn =
+            model.connection
+
+        ( socket, cmd ) =
+            Phoenix.Socket.update msg conn.socket
+    in
+        ( { model | connection = { conn | socket = socket } }, Cmd.map PhoenixMsg cmd )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         PhoenixMsg msg ->
-            let
-                ( socket, cmd ) =
-                    Phoenix.Socket.update msg model.connection.socket
-
-                connection =
-                    model.connection
-            in
-                ( { model | connection = { connection | socket = socket } }
-                , Cmd.map PhoenixMsg cmd
-                )
+            updateSocket msg model
 
         PhxAddCheck raw ->
             case Json.Decode.decodeValue checkDecoder raw of
