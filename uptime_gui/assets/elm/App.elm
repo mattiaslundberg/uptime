@@ -38,6 +38,8 @@ type alias Model =
     , authRequired : Bool
     , checks : List Check
     , nextCheck : Check
+    , userName : String
+    , password : String
     }
 
 
@@ -79,6 +81,8 @@ init =
             , authRequired = False
             , checks = []
             , nextCheck = newNextCheck
+            , userName = ""
+            , password = ""
             }
     in
         ( model, getToken "" )
@@ -253,10 +257,10 @@ update msg model =
                     ( model, Cmd.none )
 
         SetNewUserName str ->
-            ( model, Cmd.none )
+            ( { model | userName = str }, Cmd.none )
 
         SetNewPassword str ->
-            ( model, Cmd.none )
+            ( { model | password = str }, Cmd.none )
 
         SubmitAuthForm ->
             ( model, Cmd.none )
