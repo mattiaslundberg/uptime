@@ -130,13 +130,24 @@ updateSocket msg model =
         ( { model | connection = { conn | socket = socket } }, Cmd.map PhoenixMsg cmd )
 
 
-push : Phoenix.Push.Push Msg -> Connection -> ( Connection, Cmd Msg )
-push cmd conn =
+push : String -> Json.Encode.Value -> Connection -> ( Connection, Cmd Msg )
+push command payload conn =
     let
+        cmd =
+            Phoenix.Push.init command (channelName conn.userId) |> Phoenix.Push.withPayload payload
+
         ( socket, phxCmd ) =
             Phoenix.Socket.push cmd conn.socket
     in
         ( { conn | socket = socket }, Cmd.map PhoenixMsg phxCmd )
+
+
+getSubmitCommand : Check -> String
+getSubmitCommand check =
+    if check.id == 0 then
+        "create_check"
+    else
+        "update_check"
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -198,8 +209,11 @@ update msg model =
 
         SubmitForm ->
             let
+                payload =
+                    Json.Encode.object (generateFormSerializer model.nextCheck)
+
                 ( conn, phxCmds ) =
-                    push (generateSubmitFormCommand model.connection.userId model.nextCheck) model.connection
+                    push (getSubmitCommand model.nextCheck) payload model.connection
             in
                 ( { model | connection = conn, nextCheck = newNextCheck }, phxCmds )
 
@@ -208,11 +222,8 @@ update msg model =
                 payload =
                     (Json.Encode.object [ ( "id", Json.Encode.int checkId ) ])
 
-                cmd =
-                    Phoenix.Push.init "remove_check" (channelName model.connection.userId) |> Phoenix.Push.withPayload payload
-
                 ( conn, phxCmds ) =
-                    push cmd model.connection
+                    push "remove_check" payload model.connection
             in
                 ( { model | connection = conn }, phxCmds )
 
@@ -235,22 +246,6 @@ updateIfMatch candidate current =
         candidate
     else
         current
-
-
-generateSubmitFormCommand : Int -> Check -> Phoenix.Push.Push Msg
-generateSubmitFormCommand userId check =
-    let
-        payload =
-            Json.Encode.object (generateFormSerializer check)
-
-        command =
-            (if check.id == 0 then
-                "create_check"
-             else
-                "update_check"
-            )
-    in
-        Phoenix.Push.init command (channelName userId) |> Phoenix.Push.withPayload payload
 
 
 generateFormSerializer : Check -> List ( String, Json.Encode.Value )
