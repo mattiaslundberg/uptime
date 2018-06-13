@@ -38,8 +38,8 @@ defmodule UptimeGui.UserTest do
 
   describe "authenticate/1" do
     test "correct credentials" do
-      {:ok, _user} = User.create(@valid_attrs)
-      {:ok, _token} = User.authenticate(@valid_attrs)
+      {:ok, user} = User.create(@valid_attrs)
+      {:ok, ^user, _token} = User.authenticate(@valid_attrs)
     end
 
     test "incorrect credentials" do
@@ -50,8 +50,8 @@ defmodule UptimeGui.UserTest do
 
   describe "token_data/1" do
     test "valid token" do
-      {:ok, %User{id: user_id}} = User.create(@valid_attrs)
-      {:ok, token} = User.authenticate(@valid_attrs)
+      {:ok, user = %User{id: user_id}} = User.create(@valid_attrs)
+      {:ok, ^user, token} = User.authenticate(@valid_attrs)
       {:ok, %{"user_id" => ^user_id}} = User.token_data(token)
     end
 

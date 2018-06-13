@@ -47,7 +47,7 @@ defmodule UptimeGui.User do
             "user_id" => user.id
           })
 
-        {:ok, token}
+        {:ok, user, token}
 
       _ ->
         {:error, "Invalid credentials"}
