@@ -19,6 +19,8 @@ defmodule UptimeGuiWeb.Router do
 
     get("/", PageController, :index)
     post("/", PageController, :create)
+
+    post("/login", AuthController, :login)
   end
 
   # Other scopes may use custom stacks.
