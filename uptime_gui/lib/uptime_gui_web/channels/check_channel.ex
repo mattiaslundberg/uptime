@@ -6,11 +6,15 @@ defmodule UptimeGuiWeb.CheckChannel do
   alias UptimeGui.{Check, Repo, User}
 
   def join("checks:" <> user_id, payload, socket) do
-    if authorized?(user_id, payload) do
+    with true <- authorized?(user_id, payload),
+         user = %User{} <- Repo.get(User, user_id) do
+      socket = assign(socket, :user, user)
+
       send(self(), :after_join)
       {:ok, socket}
     else
-      {:error, %{reason: "unauthorized"}}
+      false ->
+        {:error, %{reason: "unauthorized"}}
     end
   end
 
@@ -24,7 +28,7 @@ defmodule UptimeGuiWeb.CheckChannel do
   end
 
   def handle_in("create_check", payload, socket) do
-    case Check.create(payload) do
+    case Check.create(socket.assigns.user, payload) do
       {:ok, check} ->
         broadcast(socket, "create_check", Check.serialize(check))
         {:reply, {:ok, Check.serialize(check)}, socket}

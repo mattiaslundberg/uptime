@@ -36,10 +36,10 @@ defmodule UptimeGui.Check do
     }
   end
 
-  def create(params) do
-    changeset = changeset(%__MODULE__{}, params)
+  def create(user, params) do
+    check_changeset = build_assoc(user, :checks) |> changeset(params)
 
-    case Repo.insert(changeset) do
+    case Repo.insert(check_changeset) do
       {:ok, check} ->
         Uptime.add_new_check(
           check.url,
