@@ -23,7 +23,7 @@ defmodule UptimeGui.Factories do
       })
       |> Repo.insert()
 
-    {:ok, token} = UptimeGui.User.authenticate(user.id, %{email: user.email, password: password})
+    {:ok, token} = UptimeGui.User.authenticate(%{email: user.email, password: password})
     {:ok, user, token}
   end
 end

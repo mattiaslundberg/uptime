@@ -38,9 +38,9 @@ defmodule UptimeGui.User do
     end
   end
 
-  def authenticate(user_id, credentials) do
+  def authenticate(credentials) do
     case validate_credentials(credentials) do
-      {:ok, true, user = %__MODULE__{id: ^user_id}} ->
+      {:ok, true, user} ->
         token =
           Cipher.cipher(%{
             "created" => DateTime.utc_now(),
