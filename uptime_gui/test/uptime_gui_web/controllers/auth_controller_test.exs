@@ -2,15 +2,17 @@ defmodule UptimeGuiWeb.AuthControllerTest do
   use UptimeGuiWeb.ConnCase, async: false
 
   describe "login/2" do
-    test "login with valid credentials", %{conn: conn} do
-      {:ok, user, token} = insert_user(password: "secret")
+    test "login with valid credentials" do
+      conn = build_conn()
+      {:ok, user, _token} = insert_user(password: "secret")
       conn = post(conn, "/login", %{"email" => user.email, "password" => "secret"})
 
       assert Map.keys(json_response(conn, 200)) == ["token"]
     end
 
     test "login with invalid password" do
-      {:ok, user, token} = insert_user(password: "secret")
+      conn = build_conn()
+      {:ok, user, _token} = insert_user(password: "secret")
       conn = post(conn, "/login", %{"email" => user.email, "password" => "invalid"})
 
       assert Map.keys(json_response(conn, 200)) == ["error"]
