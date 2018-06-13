@@ -10,6 +10,8 @@ defmodule UptimeGui.User do
     field(:email, :string)
     field(:password, :string)
 
+    has_many(:checks, UptimeGui.Check)
+
     timestamps()
   end
 

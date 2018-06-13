@@ -8,6 +8,8 @@ defmodule UptimeGui.Check do
     field(:notify_number, :string)
     field(:expected_code, :integer)
 
+    belongs_to(:user, UptimeGui.User)
+
     timestamps()
   end
 
