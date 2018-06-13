@@ -1,6 +1,7 @@
 module App exposing (..)
 
 import Ports exposing (..)
+import Http
 import Json.Encode
 import Bootstrap.Table as Table
 import Bootstrap.CDN as CDN
@@ -66,6 +67,7 @@ type Msg
     | EditCheck Int
     | GotToken ConnData
     | PromptAuth Bool
+    | AuthResult (Result Http.Error String)
 
 
 newNextCheck : Check
@@ -116,6 +118,11 @@ initConnection connData =
 channelName : Int -> String
 channelName userId =
     "checks:" ++ toString userId
+
+
+authFormDecoder : Json.Decode.Decoder String
+authFormDecoder =
+    Json.Decode.at [ "token" ] Json.Decode.string
 
 
 idDecoder : Json.Decode.Decoder Id
@@ -263,6 +270,22 @@ update msg model =
             ( { model | password = str }, Cmd.none )
 
         SubmitAuthForm ->
+            let
+                url =
+                    "http://localhost:4000/api/login"
+
+                payload =
+                    (Json.Encode.object [ ( "email", Json.Encode.string model.userName ), ( "password", Json.Encode.string model.password ) ])
+
+                request =
+                    Http.post url (Http.jsonBody payload) authFormDecoder
+            in
+                ( model, Http.send AuthResult request )
+
+        AuthResult (Ok token) ->
+            ( model, Cmd.none )
+
+        AuthResult (Err err) ->
             ( model, Cmd.none )
 
         DeleteCheck checkId ->
