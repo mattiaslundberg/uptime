@@ -1,9 +1,9 @@
 defmodule UptimeGui.Factories do
-  alias UptimeGui.Repo
+  alias UptimeGui.{Check, User, Repo}
 
   def insert_check(opts \\ []) do
-    UptimeGui.Check.changeset(
-      %UptimeGui.Check{},
+    Check.changeset(
+      %Check{},
       %{
         url: Keyword.get(opts, :url, "https://example.com"),
         notify_number: Keyword.get(opts, :notify_number, "+461234567"),
@@ -17,13 +17,12 @@ defmodule UptimeGui.Factories do
     password = Keyword.get(opts, :password, "password")
 
     {:ok, user} =
-      UptimeGui.User.changeset(%UptimeGui.User{}, %{
+      User.changeset(%UptimeGui.User{}, %{
         email: Keyword.get(opts, :email, "test@example.com"),
         password: Argon2.hash_pwd_salt(password)
       })
       |> Repo.insert()
 
-    {:ok, user, token} = UptimeGui.User.authenticate(%{email: user.email, password: password})
-    {:ok, user, token}
+    User.authenticate(%{email: user.email, password: password})
   end
 end
