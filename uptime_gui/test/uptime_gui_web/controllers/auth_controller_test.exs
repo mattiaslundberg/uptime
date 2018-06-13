@@ -7,7 +7,7 @@ defmodule UptimeGuiWeb.AuthControllerTest do
       {:ok, user, _token} = insert_user(password: "secret")
       conn = post(conn, "/api/login", %{"email" => user.email, "password" => "secret"})
 
-      assert Map.keys(json_response(conn, 200)) == ["token"]
+      assert Map.keys(json_response(conn, 200)) == ["token", "user_id"]
     end
 
     test "login with invalid password" do
