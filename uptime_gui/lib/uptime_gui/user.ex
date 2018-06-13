@@ -20,6 +20,7 @@ defmodule UptimeGui.User do
     user
     |> cast(attrs, [:email, :password])
     |> validate_required([:email, :password])
+    |> unique_constraint(:email)
   end
 
   def create(params = %{password: password}) do
