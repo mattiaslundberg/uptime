@@ -30,7 +30,7 @@ elmApp.ports.getToken.subscribe(() => {
   if (token && userId) {
     elmApp.ports.jsGetToken.send({
       token: token,
-      userId: +userId,
+      user_id: +userId,
     })
   } else {
     elmApp.ports.jsPromptAuth.send(true)

@@ -67,7 +67,7 @@ type Msg
     | EditCheck Int
     | GotToken ConnData
     | PromptAuth Bool
-    | AuthResult (Result Http.Error String)
+    | AuthResult (Result Http.Error ConnData)
 
 
 newNextCheck : Check
@@ -120,11 +120,6 @@ channelName userId =
     "checks:" ++ toString userId
 
 
-authFormDecoder : Json.Decode.Decoder String
-authFormDecoder =
-    Json.Decode.at [ "token" ] Json.Decode.string
-
-
 idDecoder : Json.Decode.Decoder Id
 idDecoder =
     Json.Decode.map Id
@@ -144,7 +139,7 @@ connDecoder : Json.Decode.Decoder ConnData
 connDecoder =
     Json.Decode.map2 ConnData
         (field "token" Json.Decode.string)
-        (field "userId" Json.Decode.int)
+        (field "user_id" Json.Decode.int)
 
 
 updateSocket : Phoenix.Socket.Msg Msg -> Model -> ( Model, Cmd Msg )
@@ -278,15 +273,20 @@ update msg model =
                     (Json.Encode.object [ ( "email", Json.Encode.string model.userName ), ( "password", Json.Encode.string model.password ) ])
 
                 request =
-                    Http.post url (Http.jsonBody payload) authFormDecoder
+                    Http.post url (Http.jsonBody payload) connDecoder
             in
                 ( model, Http.send AuthResult request )
 
-        AuthResult (Ok token) ->
-            ( model, Cmd.none )
+        AuthResult (Ok connData) ->
+            let
+                ( conn, cmd ) =
+                    initConnection connData
+            in
+                ( { model | connection = Just conn, authRequired = False }, cmd )
 
         AuthResult (Err err) ->
-            ( model, Cmd.none )
+            Debug.log "error"
+                ( model, Cmd.none )
 
         DeleteCheck checkId ->
             case model.connection of
