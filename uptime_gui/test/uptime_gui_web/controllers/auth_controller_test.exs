@@ -5,7 +5,7 @@ defmodule UptimeGuiWeb.AuthControllerTest do
     test "login with valid credentials" do
       conn = build_conn()
       {:ok, user, _token} = insert_user(password: "secret")
-      conn = post(conn, "/login", %{"email" => user.email, "password" => "secret"})
+      conn = post(conn, "/api/login", %{"email" => user.email, "password" => "secret"})
 
       assert Map.keys(json_response(conn, 200)) == ["token"]
     end
@@ -13,7 +13,7 @@ defmodule UptimeGuiWeb.AuthControllerTest do
     test "login with invalid password" do
       conn = build_conn()
       {:ok, user, _token} = insert_user(password: "secret")
-      conn = post(conn, "/login", %{"email" => user.email, "password" => "invalid"})
+      conn = post(conn, "/api/login", %{"email" => user.email, "password" => "invalid"})
 
       assert Map.keys(json_response(conn, 200)) == ["error"]
     end

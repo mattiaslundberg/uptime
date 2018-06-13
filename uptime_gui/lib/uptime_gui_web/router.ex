@@ -14,17 +14,15 @@ defmodule UptimeGuiWeb.Router do
   end
 
   scope "/", UptimeGuiWeb do
-    # Use the default browser stack
     pipe_through(:browser)
 
     get("/", PageController, :index)
     post("/", PageController, :create)
-
-    post("/login", AuthController, :login)
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", UptimeGuiWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", UptimeGuiWeb do
+    pipe_through(:api)
+
+    post("/login", AuthController, :index)
+  end
 end
