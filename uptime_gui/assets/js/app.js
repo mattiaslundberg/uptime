@@ -23,6 +23,11 @@ import "phoenix_html"
 const elmDiv = document.getElementById('elm-main');
 const elmApp = Elm.App.embed(elmDiv);
 
+elmApp.ports.setToken.subscribe(([token, userId]) => {
+  localStorage.setItem("uptime-token", token)
+  localStorage.setItem("uptime-userId", userId)
+})
+
 elmApp.ports.getToken.subscribe(() => {
   const token = localStorage.getItem("uptime-token")
   const userId = localStorage.getItem("uptime-userId")
@@ -30,7 +35,7 @@ elmApp.ports.getToken.subscribe(() => {
   if (token && userId) {
     elmApp.ports.jsGetToken.send({
       token: token,
-      user_id: +userId,
+      userId: +userId,
     })
   } else {
     elmApp.ports.jsPromptAuth.send(true)

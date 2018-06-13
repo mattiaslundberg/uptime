@@ -279,10 +279,13 @@ update msg model =
 
         AuthResult (Ok connData) ->
             let
-                ( conn, cmd ) =
+                ( conn, connCmd ) =
                     initConnection connData
+
+                tokenCmd =
+                    setToken ( connData.token, toString connData.userId )
             in
-                ( { model | connection = Just conn, authRequired = False }, cmd )
+                ( { model | connection = Just conn, authRequired = False }, Cmd.batch [ connCmd, tokenCmd ] )
 
         AuthResult (Err err) ->
             Debug.log "error"

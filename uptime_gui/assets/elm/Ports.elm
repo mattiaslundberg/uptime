@@ -10,3 +10,6 @@ port jsPromptAuth : (Bool -> msg) -> Sub msg
 
 
 port getToken : String -> Cmd msg
+
+
+port setToken : ( String, String ) -> Cmd msg
