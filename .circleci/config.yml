@@ -36,8 +36,12 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - command: docker build -f .circleci/Dockerfile.elm -t build_elm:latest .
-      - command: docker run -v $(pwd):/home/asdf/repo build_elm:latest
+      - run:
+          name: Build dockerfile
+          command: docker build -f .circleci/Dockerfile.elm -t build_elm:latest .
+      - run:
+          name: Compile elm
+          command: docker run -v $(pwd):/home/asdf/repo build_elm:latest
 
 
 workflows:
