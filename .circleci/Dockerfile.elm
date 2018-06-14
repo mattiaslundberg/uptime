@@ -21,8 +21,9 @@ RUN /bin/bash -c "git clone https://github.com/asdf-vm/asdf.git ~/.asdf && \
 RUN mkdir /home/asdf/repo/
 WORKDIR /home/asdf/repo/
 
-RUN /bin/bash -c "asdf install elm 0.18.0 && asdf install nodejs 10.3.0 && rm -rf /tmp/*"
+ADD --chown=asdf uptime_gui/assets/elm /home/asdf/repo
 
-CMD /bin/bash -c "ls -laR /home/asdf && cd /home/asdf/repo/uptime_gui/assets/elm && \
-                  elm-package install -y && \
-                  elm-make App.elm && cat index.html"
+RUN /bin/bash -c "asdf install && asdf install && rm -rf /tmp/*"
+
+CMD /bin/bash -c "elm-package install -y && \
+                  elm-make App.elm"
