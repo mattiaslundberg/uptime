@@ -23,6 +23,6 @@ WORKDIR /home/asdf/repo/
 
 RUN /bin/bash -c "asdf install elm 0.18.0 && asdf install nodejs 10.3.0 && rm -rf /tmp/*"
 
-CMD /bin/bash -c "cd /home/asdf/repo/uptime_gui/assets/elm && \
+CMD /bin/bash -c "ls -laR /home/asdf && cd /home/asdf/repo/uptime_gui/assets/elm && \
                   elm-package install -y && \
                   elm-make App.elm && cat index.html"
