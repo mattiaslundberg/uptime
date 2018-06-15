@@ -29,10 +29,6 @@ defmodule UptimeGui.Check do
     |> Repo.all()
   end
 
-  def get_all() do
-    Repo.all(__MODULE__)
-  end
-
   def serialize(c = %__MODULE__{}) do
     %{
       "id" => c.id,
