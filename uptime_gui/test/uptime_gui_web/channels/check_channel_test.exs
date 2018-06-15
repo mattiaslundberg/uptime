@@ -11,8 +11,8 @@ defmodule UptimeGuiWeb.CheckChannelTest do
   }
 
   test "sends checks after connection" do
-    {:ok, c} = insert_check()
     {:ok, user, token} = insert_user()
+    {:ok, c} = insert_check(user)
 
     {:ok, _, _socket} =
       socket("user_id", %{some: :assign})
