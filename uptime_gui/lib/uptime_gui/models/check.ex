@@ -18,7 +18,7 @@ defmodule UptimeGui.Check do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:url, :notify_number, :expected_code])
+    |> cast(params, [:url, :notify_number, :expected_code, :user_id])
     |> validate_required([:url, :notify_number, :expected_code])
     |> validate_format(:url, ~r/https?\:\/\/.*/)
   end
