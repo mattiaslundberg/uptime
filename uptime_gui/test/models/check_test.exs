@@ -36,11 +36,34 @@ defmodule UptimeGui.CheckTest do
     end
   end
 
-  describe "helpers" do
-    test "get_all/0" do
-      Check.changeset(%Check{}, @valid_attrs) |> Repo.insert!()
+  describe "get_all/1" do
+    test "get one" do
+      {:ok, user, _token} = insert_user()
+      Check.changeset(build_assoc(user, :checks), @valid_attrs) |> Repo.insert!()
 
-      [%Check{}] = Check.get_all()
+      [%Check{}] = Check.get_all(user.id)
+    end
+
+    test "get two" do
+      {:ok, user, _token} = insert_user()
+      Check.changeset(build_assoc(user, :checks), @valid_attrs) |> Repo.insert!()
+      Check.changeset(build_assoc(user, :checks), @valid_attrs) |> Repo.insert!()
+
+      [%Check{}, %Check{}] = Check.get_all(user.id)
+    end
+
+    test "not getting other users" do
+      {:ok, user, _token} = insert_user()
+      {:ok, other_user, _token} = insert_user(email: "other@example.com")
+      expected = Check.changeset(build_assoc(user, :checks), @valid_attrs) |> Repo.insert!()
+      Check.changeset(build_assoc(other_user, :checks), @valid_attrs) |> Repo.insert!()
+
+      [^expected] = Check.get_all(user.id)
+    end
+
+    test "get empty set" do
+      {:ok, user, _token} = insert_user()
+      [] = Check.get_all(user.id)
     end
   end
 end

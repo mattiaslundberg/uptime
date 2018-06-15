@@ -23,6 +23,12 @@ defmodule UptimeGui.Check do
     |> validate_format(:url, ~r/https?\:\/\/.*/)
   end
 
+  def get_all(user_id) do
+    __MODULE__
+    |> where([c], c.user_id == ^user_id)
+    |> Repo.all()
+  end
+
   def get_all() do
     Repo.all(__MODULE__)
   end
