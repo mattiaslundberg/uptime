@@ -1,6 +1,7 @@
 module App exposing (..)
 
 import Ports exposing (..)
+import Login
 import Http
 import Json.Encode
 import Bootstrap.Table as Table
@@ -38,19 +39,13 @@ type alias Flags =
     { url : String }
 
 
-type alias Login =
-    { userName : String
-    , password : String
-    }
-
-
 type alias Model =
     { connection : Maybe Connection
     , authRequired : Bool
     , checks : List Check
     , nextCheck : Check
     , url : String
-    , login : Login
+    , login : Login.Model
     }
 
 
@@ -70,6 +65,7 @@ type Msg
     | SetNewUrl String
     | SetNewNumber String
     | SetNewResponse String
+    | LoginMsg Login.Msg
     | SetNewUserName String
     | SetNewPassword String
     | SubmitAuthForm
@@ -95,7 +91,7 @@ init flags =
             , checks = []
             , nextCheck = newNextCheck
             , url = flags.url
-            , login = Login "" ""
+            , login = Login.init
             }
     in
         ( model, getToken "" )
@@ -267,6 +263,9 @@ update msg model =
 
                 Nothing ->
                     ( model, Cmd.none )
+
+        LoginMsg msg ->
+            ( model, Cmd.none )
 
         SetNewUserName str ->
             let
