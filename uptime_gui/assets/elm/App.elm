@@ -1,6 +1,7 @@
 module App exposing (..)
 
 import Ports exposing (..)
+import Check
 import Login
 import Http
 import Json.Encode
@@ -27,14 +28,6 @@ type alias Id =
     { id : Int }
 
 
-type alias Check =
-    { id : Int
-    , url : String
-    , notifyNumber : String
-    , expectedCode : Int
-    }
-
-
 type alias Flags =
     { url : String }
 
@@ -42,8 +35,8 @@ type alias Flags =
 type alias Model =
     { connection : Maybe Connection
     , authRequired : Bool
-    , checks : List Check
-    , nextCheck : Check
+    , checks : List Check.Model
+    , nextCheck : Check.Model
     , url : String
     , login : Login.Model
     }
@@ -73,11 +66,6 @@ type Msg
     | Logout
 
 
-newNextCheck : Check
-newNextCheck =
-    Check 0 "" "" 200
-
-
 init : Flags -> ( Model, Cmd Msg )
 init flags =
     let
@@ -85,7 +73,7 @@ init flags =
             { connection = Nothing
             , authRequired = False
             , checks = []
-            , nextCheck = newNextCheck
+            , nextCheck = Check.init
             , url = flags.url
             , login = Login.init
             }
@@ -128,9 +116,9 @@ idDecoder =
         (field "id" Json.Decode.int)
 
 
-checkDecoder : Json.Decode.Decoder Check
+checkDecoder : Json.Decode.Decoder Check.Model
 checkDecoder =
-    Json.Decode.map4 Check
+    Json.Decode.map4 Check.Model
         (field "id" Json.Decode.int)
         (field "url" Json.Decode.string)
         (field "notify_number" Json.Decode.string)
@@ -170,7 +158,7 @@ push command payload conn =
         ( { conn | socket = socket }, Cmd.map PhxMsg phxCmd )
 
 
-getSubmitCommand : Check -> String
+getSubmitCommand : Check.Model -> String
 getSubmitCommand check =
     if check.id == 0 then
         "create_check"
@@ -255,7 +243,7 @@ update msg model =
                         ( newConn, phxCmds ) =
                             push (getSubmitCommand model.nextCheck) payload conn
                     in
-                        ( { model | connection = Just newConn, nextCheck = newNextCheck }, phxCmds )
+                        ( { model | connection = Just newConn, nextCheck = Check.init }, phxCmds )
 
                 Nothing ->
                     ( model, Cmd.none )
@@ -309,12 +297,12 @@ update msg model =
                 ( { model | nextCheck = check }, Cmd.none )
 
 
-updateCheck : List Check -> Check -> List Check
+updateCheck : List Check.Model -> Check.Model -> List Check.Model
 updateCheck checks check =
     List.map (updateIfMatch check) checks
 
 
-updateIfMatch : Check -> Check -> Check
+updateIfMatch : Check.Model -> Check.Model -> Check.Model
 updateIfMatch candidate current =
     if current.id == candidate.id then
         candidate
@@ -322,7 +310,7 @@ updateIfMatch candidate current =
         current
 
 
-generateFormSerializer : Check -> List ( String, Json.Encode.Value )
+generateFormSerializer : Check.Model -> List ( String, Json.Encode.Value )
 generateFormSerializer check =
     if check.id == 0 then
         [ ( "url", Json.Encode.string check.url ), ( "notify_number", Json.Encode.string check.notifyNumber ), ( "expected_code", Json.Encode.int check.expectedCode ) ]
@@ -330,7 +318,7 @@ generateFormSerializer check =
         [ ( "id", Json.Encode.int check.id ), ( "url", Json.Encode.string check.url ), ( "notify_number", Json.Encode.string check.notifyNumber ), ( "expected_code", Json.Encode.int check.expectedCode ) ]
 
 
-drawCheck : Check -> Table.Row Msg
+drawCheck : Check.Model -> Table.Row Msg
 drawCheck check =
     Table.tr []
         [ Table.td [] [ text check.url ]
@@ -348,7 +336,7 @@ drawCheck check =
         ]
 
 
-drawChecks : List Check -> Html Msg
+drawChecks : List Check.Model -> Html Msg
 drawChecks model =
     Table.simpleTable
         ( Table.simpleThead
@@ -364,7 +352,7 @@ drawChecks model =
         )
 
 
-drawEditMessage : Check -> Html Msg
+drawEditMessage : Check.Model -> Html Msg
 drawEditMessage check =
     let
         t =
@@ -376,7 +364,7 @@ drawEditMessage check =
         Grid.row [] [ Grid.col [] [ h2 [ class "text-center" ] [ text t ] ] ]
 
 
-drawForm : Check -> List (Html Msg)
+drawForm : Check.Model -> List (Html Msg)
 drawForm check =
     [ drawEditMessage check
     , Form.form [ onSubmit SubmitForm ]
