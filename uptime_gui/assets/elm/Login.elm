@@ -4,13 +4,9 @@ import Http
 import Json.Encode
 import Json.Decode exposing (field)
 import Models exposing (ConnData)
-import Bootstrap.Table as Table
-import Bootstrap.CDN as CDN
-import Bootstrap.Grid as Grid
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form as Form
 import Bootstrap.Button as Button
-import Bootstrap.ButtonGroup as ButtonGroup
 import Json.Decode exposing (field)
 import Html exposing (Html, li, text, div, ul, form, label, input, button, span, h1, h2, a)
 import Html.Attributes exposing (value, for, type_, class, href)
