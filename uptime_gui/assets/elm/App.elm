@@ -71,7 +71,6 @@ type Msg
     | GotToken ConnData
     | PromptAuth Bool
     | Logout
-    | AuthResult (Result Http.Error ConnData)
 
 
 newNextCheck : Check
@@ -263,24 +262,22 @@ update msg model =
 
         LoginMsg msg ->
             let
-                ( loginModel, loginCmd ) =
+                ( loginModel, loginCmd, connData ) =
                     Login.update msg model.login
             in
-                ( { model | login = loginModel }, Cmd.map LoginMsg loginCmd )
+                case connData of
+                    Just connData ->
+                        let
+                            ( conn, connCmd ) =
+                                initConnection model.url connData
 
-        AuthResult (Ok connData) ->
-            let
-                ( conn, connCmd ) =
-                    initConnection model.url connData
+                            tokenCmd =
+                                setToken ( connData.token, toString connData.userId )
+                        in
+                            ( { model | connection = Just conn, authRequired = False }, Cmd.batch [ connCmd, tokenCmd ] )
 
-                tokenCmd =
-                    setToken ( connData.token, toString connData.userId )
-            in
-                ( { model | connection = Just conn, authRequired = False }, Cmd.batch [ connCmd, tokenCmd ] )
-
-        AuthResult (Err err) ->
-            Debug.log "error"
-                ( model, Cmd.none )
+                    Nothing ->
+                        ( { model | login = loginModel }, Cmd.map LoginMsg loginCmd )
 
         Logout ->
             let

@@ -27,6 +27,7 @@ type Msg
     = SetPwd String
     | SetUser String
     | Submit
+    | AuthResult (Result Http.Error ConnData)
 
 
 init : Model
@@ -34,14 +35,14 @@ init =
     { userName = "", password = "" }
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Cmd Msg, Maybe ConnData )
 update msg model =
     case msg of
         SetUser str ->
-            ( { model | userName = str }, Cmd.none )
+            ( { model | userName = str }, Cmd.none, Nothing )
 
         SetPwd str ->
-            ( { model | password = str }, Cmd.none )
+            ( { model | password = str }, Cmd.none, Nothing )
 
         Submit ->
             let
@@ -54,11 +55,14 @@ update msg model =
                 request =
                     Http.post url (Http.jsonBody payload) connDecoder
             in
-                ( model, Cmd.none )
+                ( model, Http.send AuthResult request, Nothing )
 
+        AuthResult (Ok connData) ->
+            ( model, Cmd.none, Just connData )
 
-
--- ( model, Http.send AuthResult request )
+        AuthResult (Err err) ->
+            Debug.log "error"
+                ( model, Cmd.none, Nothing )
 
 
 connDecoder : Json.Decode.Decoder ConnData
