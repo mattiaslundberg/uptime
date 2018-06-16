@@ -116,15 +116,6 @@ idDecoder =
         (field "id" Json.Decode.int)
 
 
-checkDecoder : Json.Decode.Decoder Check.Model
-checkDecoder =
-    Json.Decode.map4 Check.Model
-        (field "id" Json.Decode.int)
-        (field "url" Json.Decode.string)
-        (field "notify_number" Json.Decode.string)
-        (field "expected_code" Json.Decode.int)
-
-
 connDecoder : Json.Decode.Decoder ConnData
 connDecoder =
     Json.Decode.map2 ConnData
@@ -173,7 +164,7 @@ update msg model =
             updateSocket msg model
 
         PhxAddCheck raw ->
-            case Json.Decode.decodeValue checkDecoder raw of
+            case Json.Decode.decodeValue Check.decoder raw of
                 Ok check ->
                     ( { model | checks = check :: model.checks }
                     , Cmd.none
@@ -192,7 +183,7 @@ update msg model =
                     Debug.log (error) ( model, Cmd.none )
 
         PhxUpdateCheck raw ->
-            case Json.Decode.decodeValue checkDecoder raw of
+            case Json.Decode.decodeValue Check.decoder raw of
                 Ok check ->
                     ( { model | checks = updateCheck model.checks check }, Cmd.none )
 
