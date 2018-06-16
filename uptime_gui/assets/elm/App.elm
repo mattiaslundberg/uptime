@@ -371,7 +371,7 @@ drawForm check =
             [ Form.label [ for "expected_code" ] [ text "Expected response code" ]
             , Input.text [ Input.id "expected_code", Input.attrs [ value (toString check.expectedCode), onInput SetNewResponse ] ]
             ]
-        , Button.button [ Button.attrs [ type_ "submit", class "float-right" ] ] [ text "Save" ]
+        , Button.button [ Button.attrs [ type_ "submit" ] ] [ text "Save" ]
         ]
     ]
 
@@ -379,29 +379,30 @@ drawForm check =
 drawAuthenticated : Model -> Html Msg
 drawAuthenticated model =
     div []
-        ([ a [ href "#", onClick Logout, class "float-right" ] [ text "Logout" ]
-         , div []
-            [ CDN.stylesheet
-            , Grid.container []
-                ([ Grid.row [] [ Grid.col [] [ h1 [ class "text-center" ] [ text "Uptime" ] ] ]
-                 , Grid.row [] [ Grid.col [] [ div [ class "text-center" ] [ text "Monitors uptime for selected sites and notifies by text in case of problems." ] ] ]
-                 , Grid.row [] [ Grid.col [] [ h2 [ class "text-center" ] [ text "Active checks" ] ] ]
-                 , Grid.row [] [ Grid.col [] [ text " " ] ]
-                 ]
-                    ++ [ drawChecks model.checks ]
-                )
-            ]
+        ([ a [ href "#", onClick Logout, class "d-flex justify-content-end" ] [ text "Logout" ]
+         , Grid.row [] [ Grid.col [] [ h1 [ class "text-center" ] [ text "Uptime" ] ] ]
+         , Grid.row [] [ Grid.col [] [ div [ class "text-center" ] [ text "Monitors uptime for selected sites and notifies by text in case of problems." ] ] ]
+         , Grid.row [] [ Grid.col [] [ h2 [ class "text-center" ] [ text "Active checks" ] ] ]
+         , Grid.row [] [ Grid.col [] [ text " " ] ]
          ]
+            ++ [ drawChecks model.checks ]
             ++ drawForm model.nextCheck
         )
 
 
 view : Model -> Html Msg
 view model =
-    if model.authRequired then
-        Html.map LoginMsg (Login.view model.login)
-    else
-        drawAuthenticated model
+    let
+        main =
+            if model.authRequired then
+                Html.map LoginMsg (Login.view model.login)
+            else
+                drawAuthenticated model
+    in
+        div []
+            [ CDN.stylesheet
+            , Grid.container [] [ main ]
+            ]
 
 
 subscriptions : Model -> Sub Msg

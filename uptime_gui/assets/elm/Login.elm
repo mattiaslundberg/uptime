@@ -74,20 +74,15 @@ connDecoder =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ div []
-            [ CDN.stylesheet
-            , Form.form
-                [ onSubmit Submit ]
-                [ Form.group []
-                    [ Form.label [ for "user" ] [ text "Username" ]
-                    , Input.text [ Input.id "user", Input.attrs [ onInput SetUser ] ]
-                    ]
-                , Form.group []
-                    [ Form.label [ for "password" ] [ text "Password" ]
-                    , Input.text [ Input.id "password", Input.attrs [ type_ "password", onInput SetPwd ] ]
-                    ]
-                , Button.button [ Button.attrs [ type_ "submit", class "float-right" ] ] [ text "Login" ]
-                ]
+    Form.form
+        [ onSubmit Submit ]
+        [ Form.group []
+            [ Form.label [ for "user" ] [ text "Username" ]
+            , Input.text [ Input.id "user", Input.attrs [ onInput SetUser ] ]
             ]
+        , Form.group []
+            [ Form.label [ for "password" ] [ text "Password" ]
+            , Input.text [ Input.id "password", Input.attrs [ type_ "password", onInput SetPwd ] ]
+            ]
+        , Button.button [ Button.attrs [ type_ "submit", class "float-right" ] ] [ text "Login" ]
         ]
