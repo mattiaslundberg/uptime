@@ -21,7 +21,7 @@ import "phoenix_html"
 // import socket from "./socket"
 
 const elmDiv = document.getElementById('elm-main');
-const elmApp = Elm.App.embed(elmDiv);
+const elmApp = Elm.App.embed(elmDiv, {url: "ws://localhost:4000/socket/websocket"});
 
 elmApp.ports.setToken.subscribe(([token, userId]) => {
   localStorage.setItem("uptime-token", token)

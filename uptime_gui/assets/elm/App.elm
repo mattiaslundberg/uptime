@@ -34,11 +34,16 @@ type alias Check =
     }
 
 
+type alias Flags =
+    { url : String }
+
+
 type alias Model =
     { connection : Maybe Connection
     , authRequired : Bool
     , checks : List Check
     , nextCheck : Check
+    , url : String
     , userName : String
     , password : String
     }
@@ -75,14 +80,15 @@ newNextCheck =
     Check 0 "" "" 200
 
 
-init : ( Model, Cmd Msg )
-init =
+init : Flags -> ( Model, Cmd Msg )
+init flags =
     let
         model =
             { connection = Nothing
             , authRequired = False
             , checks = []
             , nextCheck = newNextCheck
+            , url = flags.url
             , userName = ""
             , password = ""
             }
@@ -90,8 +96,8 @@ init =
         ( model, getToken "" )
 
 
-initConnection : ConnData -> ( Connection, Cmd Msg )
-initConnection connData =
+initConnection : String -> ConnData -> ( Connection, Cmd Msg )
+initConnection url connData =
     let
         userId =
             connData.userId
@@ -104,8 +110,7 @@ initConnection connData =
                 |> Phoenix.Channel.withPayload (Json.Encode.object [ ( "token", Json.Encode.string token ) ])
 
         ( initSocket, cmd ) =
-            Phoenix.Socket.init "ws://localhost:4000/socket/websocket"
-                -- FIXME: Get from js?
+            Phoenix.Socket.init url
                 |> Phoenix.Socket.withDebug
                 |> Phoenix.Socket.on "create_check" (channelName userId) PhxAddCheck
                 |> Phoenix.Socket.on "remove_check" (channelName userId) PhxDeleteCheck
@@ -185,7 +190,7 @@ update msg model =
         GotToken connData ->
             let
                 ( conn, cmd ) =
-                    initConnection connData
+                    initConnection model.url connData
             in
                 ( { model | connection = Just conn }, cmd )
 
@@ -280,7 +285,7 @@ update msg model =
         AuthResult (Ok connData) ->
             let
                 ( conn, connCmd ) =
-                    initConnection connData
+                    initConnection model.url connData
 
                 tokenCmd =
                     setToken ( connData.token, toString connData.userId )
@@ -467,9 +472,9 @@ subscriptions model =
                 ]
 
 
-main : Program Never Model Msg
+main : Program Flags Model Msg
 main =
-    Html.program
+    Html.programWithFlags
         { init = init
         , view = view
         , update = update
