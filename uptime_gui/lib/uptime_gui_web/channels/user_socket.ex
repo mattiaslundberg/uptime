@@ -11,5 +11,5 @@ defmodule UptimeGuiWeb.UserSocket do
     {:ok, socket}
   end
 
-  def id(socket), do: "user:#{socket.assigns.user.id}"
+  def id(_socket), do: nil
 end
