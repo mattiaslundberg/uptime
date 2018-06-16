@@ -66,9 +66,6 @@ type Msg
     | SetNewNumber String
     | SetNewResponse String
     | LoginMsg Login.Msg
-    | SetNewUserName String
-    | SetNewPassword String
-    | SubmitAuthForm
     | DeleteCheck Int
     | EditCheck Int
     | GotToken ConnData
@@ -265,34 +262,11 @@ update msg model =
                     ( model, Cmd.none )
 
         LoginMsg msg ->
-            ( model, Cmd.none )
-
-        SetNewUserName str ->
             let
-                login =
-                    model.login
+                ( loginModel, loginCmd ) =
+                    Login.update msg model.login
             in
-                ( { model | login = { login | userName = str } }, Cmd.none )
-
-        SetNewPassword str ->
-            let
-                login =
-                    model.login
-            in
-                ( { model | login = { login | password = str } }, Cmd.none )
-
-        SubmitAuthForm ->
-            let
-                url =
-                    "http://localhost:4000/api/login"
-
-                payload =
-                    (Json.Encode.object [ ( "email", Json.Encode.string model.login.userName ), ( "password", Json.Encode.string model.login.password ) ])
-
-                request =
-                    Http.post url (Http.jsonBody payload) connDecoder
-            in
-                ( model, Http.send AuthResult request )
+                ( { model | login = loginModel }, Cmd.map LoginMsg loginCmd )
 
         AuthResult (Ok connData) ->
             let
@@ -446,31 +420,10 @@ drawAuthenticated model =
         )
 
 
-drawAuthForm : Model -> Html Msg
-drawAuthForm model =
-    div []
-        [ div []
-            [ CDN.stylesheet
-            , Form.form
-                [ onSubmit SubmitAuthForm ]
-                [ Form.group []
-                    [ Form.label [ for "user" ] [ text "Username" ]
-                    , Input.text [ Input.id "user", Input.attrs [ onInput SetNewUserName ] ]
-                    ]
-                , Form.group []
-                    [ Form.label [ for "password" ] [ text "Password" ]
-                    , Input.text [ Input.id "password", Input.attrs [ type_ "password", onInput SetNewPassword ] ]
-                    ]
-                , Button.button [ Button.attrs [ type_ "submit", class "float-right" ] ] [ text "Login" ]
-                ]
-            ]
-        ]
-
-
 view : Model -> Html Msg
 view model =
     if model.authRequired then
-        drawAuthForm model
+        Html.map LoginMsg (Login.view model.login)
     else
         drawAuthenticated model
 
