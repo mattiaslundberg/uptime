@@ -38,14 +38,19 @@ type alias Flags =
     { url : String }
 
 
+type alias Login =
+    { userName : String
+    , password : String
+    }
+
+
 type alias Model =
     { connection : Maybe Connection
     , authRequired : Bool
     , checks : List Check
     , nextCheck : Check
     , url : String
-    , userName : String
-    , password : String
+    , login : Login
     }
 
 
@@ -90,8 +95,7 @@ init flags =
             , checks = []
             , nextCheck = newNextCheck
             , url = flags.url
-            , userName = ""
-            , password = ""
+            , login = Login "" ""
             }
     in
         ( model, getToken "" )
@@ -265,10 +269,18 @@ update msg model =
                     ( model, Cmd.none )
 
         SetNewUserName str ->
-            ( { model | userName = str }, Cmd.none )
+            let
+                login =
+                    model.login
+            in
+                ( { model | login = { login | userName = str } }, Cmd.none )
 
         SetNewPassword str ->
-            ( { model | password = str }, Cmd.none )
+            let
+                login =
+                    model.login
+            in
+                ( { model | login = { login | password = str } }, Cmd.none )
 
         SubmitAuthForm ->
             let
@@ -276,7 +288,7 @@ update msg model =
                     "http://localhost:4000/api/login"
 
                 payload =
-                    (Json.Encode.object [ ( "email", Json.Encode.string model.userName ), ( "password", Json.Encode.string model.password ) ])
+                    (Json.Encode.object [ ( "email", Json.Encode.string model.login.userName ), ( "password", Json.Encode.string model.login.password ) ])
 
                 request =
                     Http.post url (Http.jsonBody payload) connDecoder
