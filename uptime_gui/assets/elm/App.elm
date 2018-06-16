@@ -57,8 +57,8 @@ type alias Connection =
 
 
 type Msg
-    = PhoenixMsg (Phoenix.Socket.Msg Msg)
-    | SubmitForm
+    = SubmitForm
+    | PhxMsg (Phoenix.Socket.Msg Msg)
     | PhxAddCheck Json.Encode.Value
     | PhxDeleteCheck Json.Encode.Value
     | PhxUpdateCheck Json.Encode.Value
@@ -118,7 +118,7 @@ initConnection url connData =
                 |> Phoenix.Socket.on "update_check" (channelName userId) PhxUpdateCheck
                 |> Phoenix.Socket.join channel
     in
-        ( { socket = initSocket, token = token, userId = userId }, Cmd.map PhoenixMsg cmd )
+        ( { socket = initSocket, token = token, userId = userId }, Cmd.map PhxMsg cmd )
 
 
 channelName : Int -> String
@@ -156,7 +156,7 @@ updateSocket msg model =
                 ( socket, cmd ) =
                     Phoenix.Socket.update msg conn.socket
             in
-                ( { model | connection = Just { conn | socket = socket } }, Cmd.map PhoenixMsg cmd )
+                ( { model | connection = Just { conn | socket = socket } }, Cmd.map PhxMsg cmd )
 
         Nothing ->
             ( model, Cmd.none )
@@ -171,7 +171,7 @@ push command payload conn =
         ( socket, phxCmd ) =
             Phoenix.Socket.push cmd conn.socket
     in
-        ( { conn | socket = socket }, Cmd.map PhoenixMsg phxCmd )
+        ( { conn | socket = socket }, Cmd.map PhxMsg phxCmd )
 
 
 getSubmitCommand : Check -> String
@@ -185,7 +185,7 @@ getSubmitCommand check =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        PhoenixMsg msg ->
+        PhxMsg msg ->
             updateSocket msg model
 
         PhxAddCheck raw ->
@@ -469,7 +469,7 @@ subscriptions model =
     case model.connection of
         Just conn ->
             Sub.batch
-                [ Phoenix.Socket.listen conn.socket PhoenixMsg
+                [ Phoenix.Socket.listen conn.socket PhxMsg
                 , jsGetToken GotToken
                 , jsPromptAuth PromptAuth
                 ]
