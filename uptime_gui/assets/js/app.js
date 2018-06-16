@@ -41,3 +41,8 @@ elmApp.ports.getToken.subscribe(() => {
     elmApp.ports.jsPromptAuth.send(true)
   }
 })
+
+elmApp.ports.unsetToken.subscribe(() => {
+  localStorage.removeItem("uptime-token")
+  localStorage.removeItem("uptime-userId")
+})

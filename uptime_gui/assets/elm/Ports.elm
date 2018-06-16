@@ -13,3 +13,6 @@ port getToken : String -> Cmd msg
 
 
 port setToken : ( String, String ) -> Cmd msg
+
+
+port unsetToken : String -> Cmd msg

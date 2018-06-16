@@ -11,8 +11,8 @@ import Bootstrap.Form as Form
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
 import Json.Decode exposing (field)
-import Html exposing (Html, li, text, div, ul, form, label, input, button, span, h1, h2)
-import Html.Attributes exposing (value, for, type_, class)
+import Html exposing (Html, li, text, div, ul, form, label, input, button, span, h1, h2, a)
+import Html.Attributes exposing (value, for, type_, class, href)
 import Html.Events exposing (onSubmit, onInput, onClick)
 import List
 import List.Extra exposing (find)
@@ -72,6 +72,7 @@ type Msg
     | EditCheck Int
     | GotToken ConnData
     | PromptAuth Bool
+    | Logout
     | AuthResult (Result Http.Error ConnData)
 
 
@@ -296,6 +297,13 @@ update msg model =
             Debug.log "error"
                 ( model, Cmd.none )
 
+        Logout ->
+            let
+                tokenCmd =
+                    unsetToken ""
+            in
+                ( { model | connection = Nothing, authRequired = True }, tokenCmd )
+
         DeleteCheck checkId ->
             case model.connection of
                 Just conn ->
@@ -410,7 +418,8 @@ drawForm check =
 drawAuthenticated : Model -> Html Msg
 drawAuthenticated model =
     div []
-        ([ div []
+        ([ a [ href "#", onClick Logout, class "float-right" ] [ text "Logout" ]
+         , div []
             [ CDN.stylesheet
             , Grid.container []
                 ([ Grid.row [] [ Grid.col [] [ h1 [ class "text-center" ] [ text "Uptime" ] ] ]
