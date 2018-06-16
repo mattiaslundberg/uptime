@@ -188,16 +188,6 @@ update msg model =
         PhoenixMsg msg ->
             updateSocket msg model
 
-        GotToken connData ->
-            let
-                ( conn, cmd ) =
-                    initConnection model.url connData
-            in
-                ( { model | connection = Just conn }, cmd )
-
-        PromptAuth required ->
-            ( { model | authRequired = required }, Cmd.none )
-
         PhxAddCheck raw ->
             case Json.Decode.decodeValue checkDecoder raw of
                 Ok check ->
@@ -224,6 +214,16 @@ update msg model =
 
                 Err error ->
                     Debug.log (error) ( model, Cmd.none )
+
+        GotToken connData ->
+            let
+                ( conn, cmd ) =
+                    initConnection model.url connData
+            in
+                ( { model | connection = Just conn }, cmd )
+
+        PromptAuth required ->
+            ( { model | authRequired = required }, Cmd.none )
 
         SetNewUrl str ->
             let
