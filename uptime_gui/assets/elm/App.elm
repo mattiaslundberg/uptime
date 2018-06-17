@@ -3,7 +3,6 @@ module App exposing (..)
 import Ports exposing (..)
 import Check
 import Login
-import Http
 import Json.Encode
 import Bootstrap.Table as Table
 import Bootstrap.CDN as CDN
@@ -12,6 +11,7 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Form as Form
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
+import Bootstrap.Alert as Alert
 import Json.Decode exposing (field)
 import Html exposing (Html, li, text, div, ul, form, label, input, button, span, h1, h2, a)
 import Html.Attributes exposing (value, for, type_, class, href)
@@ -39,6 +39,7 @@ type alias Model =
     , nextCheck : Check.Model
     , url : String
     , login : Login.Model
+    , warning : String
     }
 
 
@@ -76,6 +77,7 @@ init flags =
             , nextCheck = Check.init
             , url = flags.url
             , login = Login.init
+            , warning = ""
             }
     in
         ( model, getToken "" )
@@ -171,8 +173,7 @@ update msg model =
                     )
 
                 Err error ->
-                    Debug.log (error)
-                        ( model, Cmd.none )
+                    ( { model | warning = error }, Cmd.none )
 
         PhxDeleteCheck raw ->
             case Json.Decode.decodeValue idDecoder raw of
@@ -180,7 +181,7 @@ update msg model =
                     ( { model | checks = List.filter (\c -> c.id /= data.id) model.checks }, Cmd.none )
 
                 Err error ->
-                    Debug.log (error) ( model, Cmd.none )
+                    ( { model | warning = error }, Cmd.none )
 
         PhxUpdateCheck raw ->
             case Json.Decode.decodeValue Check.decoder raw of
@@ -188,7 +189,7 @@ update msg model =
                     ( { model | checks = updateCheck model.checks check }, Cmd.none )
 
                 Err error ->
-                    Debug.log (error) ( model, Cmd.none )
+                    ( { model | warning = error }, Cmd.none )
 
         GotToken connData ->
             let
@@ -382,6 +383,10 @@ drawAuthenticated model =
         ([ a [ href "#", onClick Logout, class "d-flex justify-content-end" ] [ text "Logout" ]
          , Grid.row [] [ Grid.col [] [ h1 [ class "text-center" ] [ text "Uptime" ] ] ]
          , Grid.row [] [ Grid.col [] [ div [ class "text-center" ] [ text "Monitors uptime for selected sites and notifies by text in case of problems." ] ] ]
+         , if model.warning /= "" then
+            Alert.simpleWarning [] [ text model.warning ]
+           else
+            div [] []
          , Grid.row [] [ Grid.col [] [ h2 [ class "text-center" ] [ text "Active checks" ] ] ]
          , Grid.row [] [ Grid.col [] [ text " " ] ]
          ]
