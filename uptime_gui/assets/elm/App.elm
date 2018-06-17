@@ -169,7 +169,7 @@ handlePushOk : Json.Encode.Value -> Msg
 handlePushOk raw =
     case Json.Decode.decodeValue Status.decoder raw of
         Ok val ->
-            StatusMsg (Status.Set val.statusMsg "error")
+            StatusMsg (Status.Set val.statusMsg "success")
 
         Err error ->
             StatusMsg Status.Reset
