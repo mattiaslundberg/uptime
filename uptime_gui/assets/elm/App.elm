@@ -4,6 +4,7 @@ import Ports exposing (..)
 import Check
 import Login
 import Json.Encode
+import Status
 import Bootstrap.Table as Table
 import Bootstrap.CDN as CDN
 import Bootstrap.Grid as Grid
@@ -11,7 +12,6 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Form as Form
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
-import Bootstrap.Alert as Alert
 import Json.Decode exposing (field)
 import Html exposing (Html, li, text, div, ul, form, label, input, button, span, h1, h2, a)
 import Html.Attributes exposing (value, for, type_, class, href)
@@ -39,7 +39,7 @@ type alias Model =
     , nextCheck : Check.Model
     , url : String
     , login : Login.Model
-    , warning : String
+    , status : Status.Model
     }
 
 
@@ -60,6 +60,7 @@ type Msg
     | SetNewNumber String
     | SetNewResponse String
     | LoginMsg Login.Msg
+    | StatusMsg Status.Msg
     | DeleteCheck Int
     | EditCheck Int
     | GotToken ConnData
@@ -77,7 +78,7 @@ init flags =
             , nextCheck = Check.init
             , url = flags.url
             , login = Login.init
-            , warning = ""
+            , status = Status.init
             }
     in
         ( model, getToken "" )
@@ -173,7 +174,7 @@ update msg model =
                     )
 
                 Err error ->
-                    ( { model | warning = error }, Cmd.none )
+                    handlePhxError error model
 
         PhxDeleteCheck raw ->
             case Json.Decode.decodeValue idDecoder raw of
@@ -181,7 +182,7 @@ update msg model =
                     ( { model | checks = List.filter (\c -> c.id /= data.id) model.checks }, Cmd.none )
 
                 Err error ->
-                    ( { model | warning = error }, Cmd.none )
+                    handlePhxError error model
 
         PhxUpdateCheck raw ->
             case Json.Decode.decodeValue Check.decoder raw of
@@ -189,7 +190,7 @@ update msg model =
                     ( { model | checks = updateCheck model.checks check }, Cmd.none )
 
                 Err error ->
-                    ( { model | warning = error }, Cmd.none )
+                    handlePhxError error model
 
         GotToken connData ->
             let
@@ -240,6 +241,13 @@ update msg model =
                 Nothing ->
                     ( model, Cmd.none )
 
+        StatusMsg msg ->
+            let
+                ( statusModel, statusCmd ) =
+                    Status.update msg model.status
+            in
+                ( { model | status = statusModel }, Cmd.map StatusMsg statusCmd )
+
         LoginMsg msg ->
             let
                 ( loginModel, loginCmd, connData ) =
@@ -287,6 +295,15 @@ update msg model =
                     Maybe.withDefault model.nextCheck (find (\c -> c.id == checkId) model.checks)
             in
                 ( { model | nextCheck = check }, Cmd.none )
+
+
+handlePhxError : String -> Model -> ( Model, Cmd Msg )
+handlePhxError error model =
+    let
+        ( newStatus, statusCmd ) =
+            Status.update (Status.Set error "error") model.status
+    in
+        ( { model | status = newStatus }, Cmd.map StatusMsg statusCmd )
 
 
 updateCheck : List Check.Model -> Check.Model -> List Check.Model
@@ -383,10 +400,6 @@ drawAuthenticated model =
         ([ a [ href "#", onClick Logout, class "d-flex justify-content-end" ] [ text "Logout" ]
          , Grid.row [] [ Grid.col [] [ h1 [ class "text-center" ] [ text "Uptime" ] ] ]
          , Grid.row [] [ Grid.col [] [ div [ class "text-center" ] [ text "Monitors uptime for selected sites and notifies by text in case of problems." ] ] ]
-         , if model.warning /= "" then
-            Alert.simpleWarning [] [ text model.warning ]
-           else
-            div [] []
          , Grid.row [] [ Grid.col [] [ h2 [ class "text-center" ] [ text "Active checks" ] ] ]
          , Grid.row [] [ Grid.col [] [ text " " ] ]
          ]
@@ -406,7 +419,7 @@ view model =
     in
         div []
             [ CDN.stylesheet
-            , Grid.container [] [ main ]
+            , Grid.container [] [ Html.map StatusMsg (Status.view model.status), main ]
             ]
 
 
