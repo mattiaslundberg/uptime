@@ -158,8 +158,8 @@ push command payload conn =
 handlePushError : Json.Encode.Value -> Msg
 handlePushError raw =
     case Json.Decode.decodeValue Status.decoder raw of
-        Ok statusMsg ->
-            StatusMsg (Status.Set (toString raw) "error")
+        Ok val ->
+            StatusMsg (Status.Set val.statusMsg "error")
 
         Err error ->
             StatusMsg (Status.Set "Unknown error" "error")
