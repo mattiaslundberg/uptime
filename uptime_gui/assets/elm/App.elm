@@ -126,8 +126,8 @@ connDecoder =
         (field "user_id" Json.Decode.int)
 
 
-updateSocket : Phoenix.Socket.Msg Msg -> Model -> ( Model, Cmd Msg )
-updateSocket msg model =
+handlePhxMsg : Phoenix.Socket.Msg Msg -> Model -> ( Model, Cmd Msg )
+handlePhxMsg msg model =
     case model.connection of
         Just conn ->
             let
@@ -164,7 +164,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         PhxMsg msg ->
-            updateSocket msg model
+            handlePhxMsg msg model
 
         PhxAddCheck raw ->
             case Json.Decode.decodeValue Check.decoder raw of
