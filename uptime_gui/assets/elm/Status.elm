@@ -6,7 +6,7 @@ import Bootstrap.Alert as Alert
 
 
 type alias Model =
-    { message : String, status : String }
+    { message : String, status : String, visibility : Alert.Visibility }
 
 
 type alias StatusMsg =
@@ -16,31 +16,41 @@ type alias StatusMsg =
 type Msg
     = Set String String
     | Reset
+    | AlertMsg Alert.Visibility
 
 
 init : Model
 init =
-    { message = "", status = "" }
+    { message = "", status = "", visibility = Alert.closed }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Set message status ->
-            ( { model | message = message, status = status }, Cmd.none )
+            ( { model | message = message, status = status, visibility = Alert.shown }, Cmd.none )
 
         Reset ->
-            ( { model | message = "" }, Cmd.none )
+            ( { model | message = "", visibility = Alert.closed }, Cmd.none )
+
+        AlertMsg visibility ->
+            ( { model | visibility = visibility }, Cmd.none )
 
 
 view : Model -> Html Msg
 view model =
-    if model.status == "error" && model.message /= "" then
-        Alert.simpleWarning [] [ text model.message ]
-    else if model.status == "success" && model.message /= "" then
-        Alert.simpleSuccess [] [ text model.message ]
-    else
-        div [] []
+    let
+        role =
+            if model.status == "error" then
+                Alert.warning
+            else
+                Alert.success
+    in
+        Alert.config
+            |> role
+            |> Alert.dismissable AlertMsg
+            |> Alert.children [ text model.message ]
+            |> Alert.view model.visibility
 
 
 decoder : Json.Decode.Decoder StatusMsg
