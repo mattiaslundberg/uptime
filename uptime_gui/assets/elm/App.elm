@@ -147,6 +147,7 @@ push command payload conn =
             Phoenix.Push.init command (channelName conn.userId)
                 |> Phoenix.Push.withPayload payload
                 |> Phoenix.Push.onError handlePushError
+                |> Phoenix.Push.onOk handlePushOk
 
         ( socket, phxCmd ) =
             Phoenix.Socket.push cmd conn.socket
@@ -162,6 +163,16 @@ handlePushError raw =
 
         Err error ->
             StatusMsg (Status.Set "Unknown error" "error")
+
+
+handlePushOk : Json.Encode.Value -> Msg
+handlePushOk raw =
+    case Json.Decode.decodeValue Status.decoder raw of
+        Ok val ->
+            StatusMsg (Status.Set val.statusMsg "error")
+
+        Err error ->
+            StatusMsg Status.Reset
 
 
 getSubmitCommand : Check.Model -> String

@@ -14,6 +14,7 @@ type alias StatusMsg =
 
 type Msg
     = Set String String
+    | Reset
 
 
 init : Model
@@ -26,6 +27,9 @@ update msg model =
     case msg of
         Set message status ->
             ( { model | message = message, status = status }, Cmd.none )
+
+        Reset ->
+            ( { model | message = "" }, Cmd.none )
 
 
 view : Model -> Html Msg
