@@ -55,8 +55,8 @@ defmodule UptimeGuiWeb.CheckChannelTest do
       assert_reply(ref, :error, %{"errors" => %{"url" => "Invalid format"}})
     end
 
-    test "update existing check with valid parameters", %{socket: socket} do
-      {:ok, %Check{id: check_id}} = insert_check()
+    test "update existing check with valid parameters", %{socket: socket, user: user} do
+      {:ok, %Check{id: check_id}} = insert_check(user)
 
       params = %{
         "id" => check_id,
@@ -73,8 +73,8 @@ defmodule UptimeGuiWeb.CheckChannelTest do
       %Check{url: "https://new.example.com"} = Repo.get(Check, check_id)
     end
 
-    test "update existing check with invalid parameters", %{socket: socket} do
-      {:ok, check} = insert_check()
+    test "update existing check with invalid parameters", %{socket: socket, user: user} do
+      {:ok, check} = insert_check(user)
 
       params = %{
         "id" => check.id,
@@ -86,6 +86,23 @@ defmodule UptimeGuiWeb.CheckChannelTest do
       assert_reply(ref, :error, %{
         "errors" => %{"url" => "Invalid format"},
         "status_msg" => "Something went wrong when updating check"
+      })
+    end
+
+    test "update check owned by other user", %{socket: socket} do
+      {:ok, other_user, _token} = insert_user(email: "other@example.com")
+      {:ok, check} = insert_check(other_user)
+
+      params = %{
+        "id" => check.id,
+        "url" => "https://new.example.com"
+      }
+
+      ref = push(socket, "update_check", params)
+
+      assert_reply(ref, :error, %{
+        "status_msg" => "Cannot update non existing check",
+        "errors" => %{}
       })
     end
 

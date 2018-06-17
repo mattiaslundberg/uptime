@@ -48,8 +48,7 @@ defmodule UptimeGuiWeb.CheckChannel do
 
   def handle_in("update_check", payload, socket) do
     with id when not is_nil(id) <- Map.get(payload, "id"),
-         # FIXME: Only allow updating checks for current user
-         check when not is_nil(check) <- UptimeGui.Repo.get(Check, id),
+         check when not is_nil(check) <- Check.get(socket.assigns.user.id, id),
          {:ok, updated} <- UptimeGui.Repo.update(Check.changeset(check, payload)),
          serialized <- Check.serialize(updated) do
       broadcast(socket, "update_check", serialized)
@@ -69,16 +68,10 @@ defmodule UptimeGuiWeb.CheckChannel do
     end
   end
 
-  defp errors_from_changeset(%{errors: errors}) do
-    Enum.reduce(errors, %{}, fn {field, {message, _}}, r ->
-      Map.put(r, Atom.to_string(field), message)
-    end)
-  end
-
   def handle_in("remove_check", payload, socket) do
     with id when not is_nil(id) <- Map.get(payload, "id"),
          check when not is_nil(check) <- Check.get(socket.assigns.user.id, id),
-         {:ok, check} = Repo.delete(check) do
+         {:ok, _check} = Repo.delete(check) do
       broadcast(socket, "remove_check", %{"id" => id})
       {:reply, {:ok, %{"status_msg" => "Successfully removed check", "check_id" => id}}, socket}
     else
@@ -86,6 +79,12 @@ defmodule UptimeGuiWeb.CheckChannel do
         {:reply, {:error, %{"status_msg" => "Cannot remove non existing check", "errors" => %{}}},
          socket}
     end
+  end
+
+  defp errors_from_changeset(%{errors: errors}) do
+    Enum.reduce(errors, %{}, fn {field, {message, _}}, r ->
+      Map.put(r, Atom.to_string(field), message)
+    end)
   end
 
   defp authorized?(user_id_str, payload) do
