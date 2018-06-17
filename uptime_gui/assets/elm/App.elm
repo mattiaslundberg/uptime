@@ -144,12 +144,24 @@ push : String -> Json.Encode.Value -> Connection -> ( Connection, Cmd Msg )
 push command payload conn =
     let
         cmd =
-            Phoenix.Push.init command (channelName conn.userId) |> Phoenix.Push.withPayload payload
+            Phoenix.Push.init command (channelName conn.userId)
+                |> Phoenix.Push.withPayload payload
+                |> Phoenix.Push.onError handlePushError
 
         ( socket, phxCmd ) =
             Phoenix.Socket.push cmd conn.socket
     in
         ( { conn | socket = socket }, Cmd.map PhxMsg phxCmd )
+
+
+handlePushError : Json.Encode.Value -> Msg
+handlePushError raw =
+    case Json.Decode.decodeValue Status.decoder raw of
+        Ok statusMsg ->
+            StatusMsg (Status.Set (toString raw) "error")
+
+        Err error ->
+            StatusMsg (Status.Set "Unknown error" "error")
 
 
 getSubmitCommand : Check.Model -> String

@@ -1,10 +1,15 @@
 module Status exposing (..)
 
 import Html exposing (Html, div, text)
+import Json.Decode exposing (field)
 
 
 type alias Model =
     { message : String, status : String }
+
+
+type alias StatusMsg =
+    { statusMsg : String }
 
 
 type Msg
@@ -26,3 +31,9 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div [] [ text model.message ]
+
+
+decoder : Json.Decode.Decoder StatusMsg
+decoder =
+    Json.Decode.map StatusMsg
+        (field "status_msg" Json.Decode.string)
