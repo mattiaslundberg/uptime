@@ -31,26 +31,41 @@ defmodule UptimeGuiWeb.CheckChannel do
     case Check.create(socket.assigns.user, payload) do
       {:ok, check} ->
         broadcast(socket, "create_check", Check.serialize(check))
-        {:reply, {:ok, Check.serialize(check)}, socket}
+
+        {:reply,
+         {:ok, %{"status_msg" => "Successfully created new check", "check_id" => check.id}},
+         socket}
 
       {:error, changeset} ->
-        {:reply, {:error, errors_from_changeset(changeset)}, socket}
+        {:reply,
+         {:error,
+          %{
+            "status_msg" => "Something went wrong when creating check",
+            "errors" => errors_from_changeset(changeset)
+          }}, socket}
     end
   end
 
   def handle_in("update_check", payload, socket) do
     with id when not is_nil(id) <- Map.get(payload, "id"),
+         # FIXME: Only allow updating checks for current user
          check when not is_nil(check) <- UptimeGui.Repo.get(Check, id),
          {:ok, updated} <- UptimeGui.Repo.update(Check.changeset(check, payload)),
          serialized <- Check.serialize(updated) do
       broadcast(socket, "update_check", serialized)
-      {:reply, {:ok, serialized}, socket}
+      {:reply, {:ok, %{"status_msg" => "Successfully updated check", "check_id" => id}}, socket}
     else
       {:error, changeset} ->
-        {:reply, {:error, errors_from_changeset(changeset)}, socket}
+        {:reply,
+         {:error,
+          %{
+            "status_msg" => "Something went wrong when updating check",
+            "errors" => errors_from_changeset(changeset)
+          }}, socket}
 
       nil ->
-        {:reply, {:error, %{"msg" => "Check not found"}}, socket}
+        {:reply, {:error, %{"status_msg" => "Cannot update non existing check", "errors" => %{}}},
+         socket}
     end
   end
 
@@ -62,13 +77,15 @@ defmodule UptimeGuiWeb.CheckChannel do
 
   def handle_in("remove_check", payload, socket) do
     with id when not is_nil(id) <- Map.get(payload, "id"),
+         # FIXME: Only allow removal of checks for current user
          check when not is_nil(check) <- Repo.get(Check, id),
          {:ok, check} = Repo.delete(check) do
       broadcast(socket, "remove_check", %{"id" => id})
-      {:reply, {:ok, %{}}, socket}
+      {:reply, {:ok, %{"status_msg" => "Successfully removed check", "check_id" => id}}, socket}
     else
       nil ->
-        {:reply, {:error, %{"msg" => "Check not found"}}, socket}
+        {:reply, {:error, %{"status_msg" => "Cannot remove non existing check", "errors" => %{}}},
+         socket}
     end
   end
 

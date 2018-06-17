@@ -38,8 +38,11 @@ defmodule UptimeGuiWeb.CheckChannelTest do
       :timer.sleep(100)
 
       [%Check{id: check_id}] = Repo.all(Check)
-      expected = Map.put(@valid_attrs, "id", check_id)
-      assert_reply(ref, :ok, ^expected)
+
+      assert_reply(ref, :ok, %{
+        "status_msg" => "Successfully created new check",
+        "check_id" => ^check_id
+      })
     end
 
     test "create check with invalid parameters", %{socket: socket} do
@@ -49,22 +52,25 @@ defmodule UptimeGuiWeb.CheckChannelTest do
 
       [] = Repo.all(Check)
 
-      assert_reply(ref, :error, %{"url" => "Invalid format"})
+      assert_reply(ref, :error, %{"errors" => %{"url" => "Invalid format"}})
     end
 
     test "update existing check with valid parameters", %{socket: socket} do
-      {:ok, check} = insert_check()
+      {:ok, %Check{id: check_id}} = insert_check()
 
       params = %{
-        "id" => check.id,
+        "id" => check_id,
         "url" => "https://new.example.com"
       }
 
       ref = push(socket, "update_check", params)
-      expected = Check.serialize(Map.put(check, :url, "https://new.example.com"))
-      assert_reply(ref, :ok, ^expected)
 
-      %Check{url: "https://new.example.com"} = Repo.get(Check, check.id)
+      assert_reply(ref, :ok, %{
+        "status_msg" => "Successfully updated check",
+        "check_id" => ^check_id
+      })
+
+      %Check{url: "https://new.example.com"} = Repo.get(Check, check_id)
     end
 
     test "update existing check with invalid parameters", %{socket: socket} do
@@ -77,7 +83,10 @@ defmodule UptimeGuiWeb.CheckChannelTest do
 
       ref = push(socket, "update_check", params)
 
-      assert_reply(ref, :error, %{"url" => "Invalid format"})
+      assert_reply(ref, :error, %{
+        "errors" => %{"url" => "Invalid format"},
+        "status_msg" => "Something went wrong when updating check"
+      })
     end
 
     test "update non-existing check", %{socket: socket} do
@@ -88,9 +97,10 @@ defmodule UptimeGuiWeb.CheckChannelTest do
 
       ref = push(socket, "update_check", params)
 
-      expected = %{"msg" => "Check not found"}
-
-      assert_reply(ref, :error, ^expected)
+      assert_reply(ref, :error, %{
+        "status_msg" => "Cannot update non existing check",
+        "errors" => %{}
+      })
     end
 
     test "update check without sending id", %{socket: socket} do
@@ -100,9 +110,10 @@ defmodule UptimeGuiWeb.CheckChannelTest do
 
       ref = push(socket, "update_check", params)
 
-      expected = %{"msg" => "Check not found"}
-
-      assert_reply(ref, :error, ^expected)
+      assert_reply(ref, :error, %{
+        "status_msg" => "Cannot update non existing check",
+        "errors" => %{}
+      })
     end
 
     test "remove existing check", %{socket: socket} do
@@ -116,12 +127,20 @@ defmodule UptimeGuiWeb.CheckChannelTest do
 
     test "remove non-existing check", %{socket: socket} do
       ref = push(socket, "remove_check", %{"id" => 3})
-      assert_reply(ref, :error, %{"msg" => "Check not found"})
+
+      assert_reply(ref, :error, %{
+        "status_msg" => "Cannot remove non existing check",
+        "errors" => %{}
+      })
     end
 
     test "remove check without sending id", %{socket: socket} do
       ref = push(socket, "remove_check", %{})
-      assert_reply(ref, :error, %{"msg" => "Check not found"})
+
+      assert_reply(ref, :error, %{
+        "status_msg" => "Cannot remove non existing check",
+        "errors" => %{}
+      })
     end
   end
 end
