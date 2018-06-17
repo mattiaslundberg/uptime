@@ -49,8 +49,7 @@ defmodule UptimeGuiWeb.CheckChannelTest do
 
       [] = Repo.all(Check)
 
-      # TODO: Serialize changeset and test
-      assert_reply(ref, :error, %{})
+      assert_reply(ref, :error, %{"url" => "Invalid format"})
     end
 
     test "update existing check with valid parameters", %{socket: socket} do
@@ -78,8 +77,7 @@ defmodule UptimeGuiWeb.CheckChannelTest do
 
       ref = push(socket, "update_check", params)
 
-      # TODO: Serialize changeset and test
-      assert_reply(ref, :error, %{})
+      assert_reply(ref, :error, %{"url" => "Invalid format"})
     end
 
     test "update non-existing check", %{socket: socket} do

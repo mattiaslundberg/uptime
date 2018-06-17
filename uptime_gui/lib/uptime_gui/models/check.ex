@@ -20,7 +20,7 @@ defmodule UptimeGui.Check do
     struct
     |> cast(params, [:url, :notify_number, :expected_code, :user_id])
     |> validate_required([:url, :notify_number, :expected_code])
-    |> validate_format(:url, ~r/https?\:\/\/.*/)
+    |> validate_format(:url, ~r/https?\:\/\/.*/, message: "Invalid format")
   end
 
   def get_all(user_id) do

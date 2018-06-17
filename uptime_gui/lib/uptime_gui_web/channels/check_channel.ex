@@ -34,7 +34,7 @@ defmodule UptimeGuiWeb.CheckChannel do
         {:reply, {:ok, Check.serialize(check)}, socket}
 
       {:error, changeset} ->
-        {:reply, {:error, changeset}, socket}
+        {:reply, {:error, errors_from_changeset(changeset)}, socket}
     end
   end
 
@@ -47,11 +47,17 @@ defmodule UptimeGuiWeb.CheckChannel do
       {:reply, {:ok, serialized}, socket}
     else
       {:error, changeset} ->
-        {:reply, {:error, changeset}, socket}
+        {:reply, {:error, errors_from_changeset(changeset)}, socket}
 
       nil ->
         {:reply, {:error, %{"msg" => "Check not found"}}, socket}
     end
+  end
+
+  defp errors_from_changeset(%{errors: errors}) do
+    Enum.reduce(errors, %{}, fn {field, {message, _}}, r ->
+      Map.put(r, Atom.to_string(field), message)
+    end)
   end
 
   def handle_in("remove_check", payload, socket) do
