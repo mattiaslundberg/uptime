@@ -2,6 +2,7 @@ module Status exposing (..)
 
 import Html exposing (Html, div, text)
 import Json.Decode exposing (field)
+import Bootstrap.Alert as Alert
 
 
 type alias Model =
@@ -34,7 +35,12 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div [] [ text model.message ]
+    if model.status == "error" && model.message /= "" then
+        Alert.simpleWarning [] [ text model.message ]
+    else if model.status == "success" && model.message /= "" then
+        Alert.simpleSuccess [] [ text model.message ]
+    else
+        div [] []
 
 
 decoder : Json.Decode.Decoder StatusMsg
