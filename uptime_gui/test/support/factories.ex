@@ -1,15 +1,9 @@
 defmodule UptimeGui.Factories do
   alias UptimeGui.{Check, User, Repo}
 
-  def insert_check(user \\ nil, opts \\ []) do
-    check =
-      case user do
-        nil -> %Check{}
-        _ -> Ecto.build_assoc(user, :checks)
-      end
-
+  def insert_check(user, opts \\ []) do
     Check.changeset(
-      check,
+      Ecto.build_assoc(user, :checks),
       %{
         url: Keyword.get(opts, :url, "https://example.com"),
         notify_number: Keyword.get(opts, :notify_number, "+461234567"),
