@@ -77,8 +77,7 @@ defmodule UptimeGuiWeb.CheckChannel do
 
   def handle_in("remove_check", payload, socket) do
     with id when not is_nil(id) <- Map.get(payload, "id"),
-         # FIXME: Only allow removal of checks for current user
-         check when not is_nil(check) <- Repo.get(Check, id),
+         check when not is_nil(check) <- Check.get(socket.assigns.user.id, id),
          {:ok, check} = Repo.delete(check) do
       broadcast(socket, "remove_check", %{"id" => id})
       {:reply, {:ok, %{"status_msg" => "Successfully removed check", "check_id" => id}}, socket}

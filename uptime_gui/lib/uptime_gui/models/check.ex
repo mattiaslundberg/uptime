@@ -29,6 +29,12 @@ defmodule UptimeGui.Check do
     |> Repo.all()
   end
 
+  def get(user_id, check_id) do
+    __MODULE__
+    |> where([c], c.user_id == ^user_id and c.id == ^check_id)
+    |> Repo.one()
+  end
+
   def serialize(c = %__MODULE__{}) do
     %{
       "id" => c.id,

@@ -30,7 +30,7 @@ defmodule UptimeGuiWeb.CheckChannelTest do
         socket("user_id", %{some: :assign})
         |> subscribe_and_join(CheckChannel, "checks:" <> to_string(user.id), %{"token" => token})
 
-      {:ok, socket: socket}
+      {:ok, socket: socket, user: user}
     end
 
     test "create check with valid parameters", %{socket: socket} do
@@ -116,13 +116,26 @@ defmodule UptimeGuiWeb.CheckChannelTest do
       })
     end
 
-    test "remove existing check", %{socket: socket} do
-      {:ok, check} = insert_check()
+    test "remove existing check", %{socket: socket, user: user} do
+      {:ok, check} = insert_check(user)
 
       ref = push(socket, "remove_check", %{"id" => check.id})
       assert_reply(ref, :ok, %{})
 
       assert is_nil(Repo.get(Check, check.id))
+    end
+
+    test "remove check that belongs to other user", %{socket: socket} do
+      {:ok, other_user, _token} = insert_user(email: "hello@example.com")
+      {:ok, check} = insert_check(other_user)
+      ref = push(socket, "remove_check", %{"id" => check.id})
+
+      assert_reply(ref, :error, %{
+        "errors" => %{},
+        "status_msg" => "Cannot remove non existing check"
+      })
+
+      assert not is_nil(Repo.get(Check, check.id))
     end
 
     test "remove non-existing check", %{socket: socket} do
