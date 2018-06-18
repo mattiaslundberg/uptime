@@ -3,13 +3,12 @@ module App exposing (..)
 import Ports exposing (..)
 import Check
 import Login
+import CheckForm
 import Json.Encode
 import Status
 import Bootstrap.Table as Table
 import Bootstrap.CDN as CDN
 import Bootstrap.Grid as Grid
-import Bootstrap.Form.Input as Input
-import Bootstrap.Form as Form
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
 import Json.Decode exposing (field)
@@ -36,7 +35,7 @@ type alias Model =
     { connection : Maybe Connection
     , authRequired : Bool
     , checks : List Check.Model
-    , nextCheck : Check.Model
+    , checkForm : CheckForm.Model
     , url : String
     , login : Login.Model
     , status : Status.Model
@@ -51,14 +50,11 @@ type alias Connection =
 
 
 type Msg
-    = SubmitForm
-    | PhxMsg (Phoenix.Socket.Msg Msg)
+    = PhxMsg (Phoenix.Socket.Msg Msg)
     | PhxAddCheck Json.Encode.Value
     | PhxDeleteCheck Json.Encode.Value
     | PhxUpdateCheck Json.Encode.Value
-    | SetNewUrl String
-    | SetNewNumber String
-    | SetNewResponse String
+    | CheckFormMsg CheckForm.Msg
     | LoginMsg Login.Msg
     | StatusMsg Status.Msg
     | DeleteCheck Int
@@ -75,7 +71,7 @@ init flags =
             { connection = Nothing
             , authRequired = False
             , checks = []
-            , nextCheck = Check.init
+            , checkForm = CheckForm.init
             , url = flags.url
             , login = Login.init
             , status = Status.init
@@ -175,14 +171,6 @@ handlePushOk raw =
             StatusMsg Status.Reset
 
 
-getSubmitCommand : Check.Model -> String
-getSubmitCommand check =
-    if check.id == 0 then
-        "create_check"
-    else
-        "update_check"
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -225,44 +213,30 @@ update msg model =
         PromptAuth required ->
             ( { model | authRequired = required }, Cmd.none )
 
-        SetNewUrl str ->
-            let
-                current =
-                    model.nextCheck
-            in
-                ( { model | nextCheck = { current | url = str } }, Cmd.none )
+        CheckFormMsg msg ->
+            case msg of
+                -- TODO: Move submit to Form module if possible
+                CheckForm.Submit ->
+                    case model.connection of
+                        Just conn ->
+                            let
+                                payload =
+                                    Json.Encode.object (CheckForm.serializer model.checkForm)
 
-        SetNewNumber str ->
-            let
-                current =
-                    model.nextCheck
-            in
-                ( { model | nextCheck = { current | notifyNumber = str } }, Cmd.none )
+                                ( newConn, phxCmds ) =
+                                    push (CheckForm.submitCmd model.checkForm) payload conn
+                            in
+                                ( { model | connection = Just newConn, checkForm = CheckForm.init }, phxCmds )
 
-        SetNewResponse str ->
-            let
-                current =
-                    model.nextCheck
+                        Nothing ->
+                            ( model, Cmd.none )
 
-                newValue =
-                    Result.withDefault model.nextCheck.expectedCode (String.toInt str)
-            in
-                ( { model | nextCheck = { current | expectedCode = newValue } }, Cmd.none )
-
-        SubmitForm ->
-            case model.connection of
-                Just conn ->
+                _ ->
                     let
-                        payload =
-                            Json.Encode.object (generateFormSerializer model.nextCheck)
-
-                        ( newConn, phxCmds ) =
-                            push (getSubmitCommand model.nextCheck) payload conn
+                        ( cfModel, cfCmd ) =
+                            CheckForm.update msg model.checkForm
                     in
-                        ( { model | connection = Just newConn, nextCheck = Check.init }, phxCmds )
-
-                Nothing ->
-                    ( model, Cmd.none )
+                        ( { model | checkForm = cfModel }, Cmd.map CheckFormMsg cfCmd )
 
         StatusMsg msg ->
             let
@@ -315,9 +289,9 @@ update msg model =
         EditCheck checkId ->
             let
                 check =
-                    Maybe.withDefault model.nextCheck (find (\c -> c.id == checkId) model.checks)
+                    Maybe.withDefault model.checkForm (find (\c -> c.id == checkId) model.checks)
             in
-                ( { model | nextCheck = check }, Cmd.none )
+                ( { model | checkForm = check }, Cmd.none )
 
 
 handlePhxError : String -> Model -> ( Model, Cmd Msg )
@@ -340,14 +314,6 @@ updateIfMatch candidate current =
         candidate
     else
         current
-
-
-generateFormSerializer : Check.Model -> List ( String, Json.Encode.Value )
-generateFormSerializer check =
-    if check.id == 0 then
-        [ ( "url", Json.Encode.string check.url ), ( "notify_number", Json.Encode.string check.notifyNumber ), ( "expected_code", Json.Encode.int check.expectedCode ) ]
-    else
-        [ ( "id", Json.Encode.int check.id ), ( "url", Json.Encode.string check.url ), ( "notify_number", Json.Encode.string check.notifyNumber ), ( "expected_code", Json.Encode.int check.expectedCode ) ]
 
 
 drawCheck : Check.Model -> Table.Row Msg
@@ -384,39 +350,6 @@ drawChecks model =
         )
 
 
-drawEditMessage : Check.Model -> Html Msg
-drawEditMessage check =
-    let
-        t =
-            if check.id == 0 then
-                "Create new check"
-            else
-                "Edit check"
-    in
-        Grid.row [] [ Grid.col [] [ h2 [ class "text-center" ] [ text t ] ] ]
-
-
-drawForm : Check.Model -> List (Html Msg)
-drawForm check =
-    [ drawEditMessage check
-    , Form.form [ onSubmit SubmitForm ]
-        [ Form.group []
-            [ Form.label [ for "url" ] [ text "Url" ]
-            , Input.text [ Input.id "url", Input.attrs [ value check.url, onInput SetNewUrl ] ]
-            ]
-        , Form.group []
-            [ Form.label [ for "notify_no" ] [ text "Notify number" ]
-            , Input.text [ Input.id "notify_no", Input.attrs [ value check.notifyNumber, onInput SetNewNumber ] ]
-            ]
-        , Form.group []
-            [ Form.label [ for "expected_code" ] [ text "Expected response code" ]
-            , Input.text [ Input.id "expected_code", Input.attrs [ value (toString check.expectedCode), onInput SetNewResponse ] ]
-            ]
-        , Button.button [ Button.attrs [ type_ "submit" ] ] [ text "Save" ]
-        ]
-    ]
-
-
 drawAuthenticated : Model -> Html Msg
 drawAuthenticated model =
     div []
@@ -427,7 +360,7 @@ drawAuthenticated model =
          , Grid.row [] [ Grid.col [] [ text " " ] ]
          ]
             ++ [ drawChecks model.checks ]
-            ++ drawForm model.nextCheck
+            ++ [ Html.map CheckFormMsg (CheckForm.view model.checkForm) ]
         )
 
 
