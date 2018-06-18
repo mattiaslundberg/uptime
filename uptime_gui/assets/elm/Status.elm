@@ -2,6 +2,7 @@ module Status exposing (..)
 
 import Html exposing (Html, div, text)
 import Json.Decode exposing (field)
+import Json.Encode
 import Bootstrap.Alert as Alert
 
 
@@ -57,3 +58,13 @@ decoder : Json.Decode.Decoder StatusMsg
 decoder =
     Json.Decode.map StatusMsg
         (field "status_msg" Json.Decode.string)
+
+
+handlePushError : Json.Encode.Value -> Msg
+handlePushError raw =
+    case Json.Decode.decodeValue decoder raw of
+        Ok val ->
+            Set val.statusMsg "error"
+
+        Err error ->
+            Set "Unknown error" "error"
