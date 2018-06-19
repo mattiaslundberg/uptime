@@ -51,6 +51,7 @@ type alias Connection =
 
 type Msg
     = PhxMsg (Phoenix.Socket.Msg Msg)
+    | PhxPushError Json.Encode.Value
     | PhxAddCheck Json.Encode.Value
     | PhxDeleteCheck Json.Encode.Value
     | PhxUpdateCheck Json.Encode.Value
@@ -142,8 +143,7 @@ push command payload conn =
         cmd =
             Phoenix.Push.init command (channelName conn.userId)
                 |> Phoenix.Push.withPayload payload
-                |> Phoenix.Push.onError
-                    (\r -> StatusMsg (Status.handlePushError r))
+                |> Phoenix.Push.onError PhxPushError
                 |> Phoenix.Push.onOk handlePushOk
 
         ( socket, phxCmd ) =
@@ -167,6 +167,13 @@ update msg model =
     case msg of
         PhxMsg msg ->
             handlePhxMsg msg model
+
+        PhxPushError raw ->
+            let
+                statusModel =
+                    Status.handlePushError model.status raw
+            in
+                ( { model | status = statusModel }, Cmd.none )
 
         PhxAddCheck raw ->
             case Json.Decode.decodeValue Check.decoder raw of

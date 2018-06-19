@@ -29,13 +29,18 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Set message status ->
-            ( { model | message = message, status = status, visibility = Alert.shown }, Cmd.none )
+            ( setStatus model message status, Cmd.none )
 
         Reset ->
             ( { model | message = "", visibility = Alert.closed }, Cmd.none )
 
         AlertMsg visibility ->
             ( { model | visibility = visibility }, Cmd.none )
+
+
+setStatus : Model -> String -> String -> Model
+setStatus model message status =
+    { model | message = message, status = status, visibility = Alert.shown }
 
 
 view : Model -> Html Msg
@@ -60,11 +65,11 @@ decoder =
         (field "status_msg" Json.Decode.string)
 
 
-handlePushError : Json.Encode.Value -> Msg
-handlePushError raw =
+handlePushError : Model -> Json.Encode.Value -> Model
+handlePushError model raw =
     case Json.Decode.decodeValue decoder raw of
         Ok val ->
-            Set val.statusMsg "error"
+            setStatus model val.statusMsg "error"
 
         Err error ->
-            Set "Unknown error" "error"
+            setStatus model "Unknown error" "error"
