@@ -172,8 +172,11 @@ update msg model =
             let
                 statusModel =
                     Status.handlePushError model.status raw
+
+                formModel =
+                    CheckForm.handlePushError model.checkForm raw
             in
-                ( { model | status = statusModel }, Cmd.none )
+                ( { model | status = statusModel, checkForm = formModel }, Cmd.none )
 
         PhxAddCheck raw ->
             case Json.Decode.decodeValue Check.decoder raw of

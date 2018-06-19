@@ -1,6 +1,8 @@
 module CheckForm exposing (..)
 
+import Dict
 import Json.Encode
+import Json.Decode exposing (field)
 import Bootstrap.Grid as Grid
 import Html.Events exposing (onSubmit, onInput, onClick)
 import Bootstrap.Form.Input as Input
@@ -8,6 +10,11 @@ import Bootstrap.Form as Form
 import Bootstrap.Button as Button
 import Html exposing (Html, li, text, div, ul, form, label, input, button, span, h1, h2, a)
 import Html.Attributes exposing (value, for, type_, class, href)
+
+
+type alias Errors =
+    { errors : Dict.Dict String String
+    }
 
 
 type alias Model =
@@ -102,3 +109,19 @@ drawEditMessage model =
                 "Edit check"
     in
         Grid.row [] [ Grid.col [] [ h2 [ class "text-center" ] [ text t ] ] ]
+
+
+decoder : Json.Decode.Decoder Errors
+decoder =
+    Json.Decode.map Errors
+        (field "errors" (Json.Decode.dict Json.Decode.string))
+
+
+handlePushError : Model -> Json.Encode.Value -> Model
+handlePushError model raw =
+    case Json.Decode.decodeValue decoder raw of
+        Ok val ->
+            model
+
+        Err error ->
+            model
