@@ -290,7 +290,7 @@ update msg model =
         EditCheck checkId ->
             let
                 check =
-                    Maybe.withDefault model.checkForm (find (\c -> c.id == checkId) model.checks)
+                    CheckForm.fromCheck (Maybe.withDefault (CheckForm.toCheck model.checkForm) (find (\c -> c.id == checkId) model.checks))
             in
                 ( { model | checkForm = check }, Cmd.none )
 

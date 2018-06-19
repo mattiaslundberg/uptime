@@ -1,6 +1,7 @@
 module CheckForm exposing (..)
 
 import Dict
+import Check
 import Json.Encode
 import Json.Decode exposing (field)
 import Bootstrap.Grid as Grid
@@ -22,6 +23,7 @@ type alias Model =
     , url : String
     , notifyNumber : String
     , expectedCode : Int
+    , errors : Dict.Dict String String
     }
 
 
@@ -38,6 +40,7 @@ init =
     , url = ""
     , notifyNumber = ""
     , expectedCode = 200
+    , errors = Dict.empty
     }
 
 
@@ -121,7 +124,26 @@ handlePushError : Model -> Json.Encode.Value -> Model
 handlePushError model raw =
     case Json.Decode.decodeValue decoder raw of
         Ok val ->
-            model
+            { model | errors = val.errors }
 
         Err error ->
             model
+
+
+fromCheck : Check.Model -> Model
+fromCheck check =
+    { id = check.id
+    , url = check.url
+    , notifyNumber = check.notifyNumber
+    , expectedCode = check.expectedCode
+    , errors = Dict.empty
+    }
+
+
+toCheck : Model -> Check.Model
+toCheck model =
+    { id = model.id
+    , url = model.url
+    , notifyNumber = model.notifyNumber
+    , expectedCode = model.expectedCode
+    }
