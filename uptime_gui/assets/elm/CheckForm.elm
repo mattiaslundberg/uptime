@@ -87,10 +87,7 @@ view model =
         , Form.form [ onSubmit Submit ]
             [ Form.group [] (viewUrl model)
             , Form.group [] (viewNo model)
-            , Form.group []
-                [ Form.label [ for "expected_code" ] [ text "Expected response code" ]
-                , Input.text [ Input.id "expected_code", Input.attrs [ value (toString model.expectedCode), onInput SetResponse ] ]
-                ]
+            , Form.group [] (viewCode model)
             , Button.button [ Button.attrs [ type_ "submit" ] ] [ text "Save" ]
             ]
         ]
@@ -122,6 +119,21 @@ viewNo model =
     in
         [ Form.label [ for "notify_no" ] [ text "Notify number" ]
         , Input.text (extraAttrs ++ [ Input.id "notify_no", Input.attrs [ value model.notifyNumber, onInput SetNumber ] ])
+        , Form.invalidFeedback [] [ text (Maybe.withDefault "" (Dict.get "notify_number" model.errors)) ]
+        ]
+
+
+viewCode : Model -> List (Html Msg)
+viewCode model =
+    let
+        extraAttrs =
+            if Dict.member "expected_code" model.errors then
+                [ Input.danger ]
+            else
+                []
+    in
+        [ Form.label [ for "expected_code" ] [ text "Expected response code" ]
+        , Input.text (extraAttrs ++ [ Input.id "expected_code", Input.attrs [ value (toString model.expectedCode), onInput SetResponse ] ])
         , Form.invalidFeedback [] [ text (Maybe.withDefault "" (Dict.get "notify_number" model.errors)) ]
         ]
 
