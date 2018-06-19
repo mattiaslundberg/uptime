@@ -85,10 +85,7 @@ view model =
     div []
         [ drawEditMessage model
         , Form.form [ onSubmit Submit ]
-            [ Form.group []
-                [ Form.label [ for "url" ] [ text "Url" ]
-                , Input.text [ Input.id "url", Input.attrs [ value model.url, onInput SetUrl ] ]
-                ]
+            [ Form.group [] (viewUrl model)
             , Form.group []
                 [ Form.label [ for "notify_no" ] [ text "Notify number" ]
                 , Input.text [ Input.id "notify_no", Input.attrs [ value model.notifyNumber, onInput SetNumber ] ]
@@ -99,6 +96,21 @@ view model =
                 ]
             , Button.button [ Button.attrs [ type_ "submit" ] ] [ text "Save" ]
             ]
+        ]
+
+
+viewUrl : Model -> List (Html Msg)
+viewUrl model =
+    let
+        extraAttrs =
+            if Dict.member "url" model.errors then
+                [ Input.danger ]
+            else
+                []
+    in
+        [ Form.label [ for "url" ] [ text "Url" ]
+        , Input.text (extraAttrs ++ [ Input.id "url", Input.attrs [ value model.url, onInput SetUrl ] ])
+        , Form.invalidFeedback [] [ text (Maybe.withDefault "" (Dict.get "url" model.errors)) ]
         ]
 
 
