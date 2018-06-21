@@ -25,6 +25,11 @@ defmodule UptimeGui.ContactTest do
       refute changeset.valid?
     end
 
+    test "refutes missing user" do
+      changeset = Contact.changeset(%Contact{}, @valid_attrs)
+      refute changeset.valid?
+    end
+
     test "valid data", %{contact: contact} do
       changeset = Contact.changeset(contact, @valid_attrs)
       assert changeset.valid?
