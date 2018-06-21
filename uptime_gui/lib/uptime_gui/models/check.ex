@@ -51,7 +51,8 @@ defmodule UptimeGui.Check do
 
     case Repo.insert(check_changeset) do
       {:ok, check} ->
-        numbers = [check.notify_number | Enum.map(contacts, & &1.number)]
+        numbers =
+          [check.notify_number | Enum.map(contacts, & &1.number)] |> Enum.reject(&is_nil/1)
 
         pid =
           Uptime.add_new_check(
