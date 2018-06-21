@@ -3,6 +3,8 @@ defmodule UptimeGui.CheckTest do
 
   alias UptimeGui.Check
 
+  import Mock
+
   @valid_attrs %{
     url: "https://example.com",
     notify_number: "+461234567",
@@ -39,6 +41,30 @@ defmodule UptimeGui.CheckTest do
     test "valid data", %{check: check} do
       changeset = Check.changeset(check, @valid_attrs)
       assert changeset.valid?
+    end
+  end
+
+  describe "create/3" do
+    setup do
+      {:ok, user, _token} = insert_user()
+      {:ok, user: user}
+    end
+
+    test "create with 2 contacts"
+    test "create with single contact"
+    test "create without contacts"
+
+    test "check with valid params", %{user: user} do
+      {:ok, %Check{}, %Uptime.Check{pid: pid, url: url, notify_numbers: numbers}} =
+        Check.create(user, @valid_attrs)
+
+      assert Process.alive?(pid)
+      assert url == "https://example.com"
+      assert numbers == ["+461234567"]
+    end
+
+    test "create with invalid params", %{user: user} do
+      {:error, _} = Check.create(user, Map.delete(@valid_attrs, :url))
     end
   end
 

@@ -46,20 +46,23 @@ defmodule UptimeGui.Check do
     }
   end
 
-  def create(user, params) do
+  def create(user, contacts \\ [], params) do
     check_changeset = build_assoc(user, :checks) |> changeset(params)
 
     case Repo.insert(check_changeset) do
       {:ok, check} ->
-        Uptime.add_new_check(
-          check.url,
-          [check.notify_number],
-          check.expected_code,
-          Application.get_env(:uptime_gui, :elks_username),
-          Application.get_env(:uptime_gui, :elks_key)
-        )
+        numbers = [check.notify_number | Enum.map(contacts, & &1.number)]
 
-        {:ok, check}
+        pid =
+          Uptime.add_new_check(
+            check.url,
+            numbers,
+            check.expected_code,
+            Application.get_env(:uptime_gui, :elks_username),
+            Application.get_env(:uptime_gui, :elks_key)
+          )
+
+        {:ok, check, pid}
 
       r ->
         r
