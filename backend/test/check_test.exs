@@ -43,7 +43,7 @@ defmodule CheckTest do
     end
 
     test "send notification when 3 fails" do
-      c = %Check{url: "abc", notify_number: "+46123", failed_checks: 3}
+      c = %Check{url: "abc", notify_numbers: ["+46123"], failed_checks: 3}
       Check.maybe_send_notification(c, DummySender)
 
       [msg] = DummySender.get_messages()
@@ -52,7 +52,7 @@ defmodule CheckTest do
     end
 
     test "not sending when no failed notifications" do
-      c = %Check{notify_number: "+46123"}
+      c = %Check{notify_numbers: ["+46123"]}
 
       Check.maybe_send_notification(c, DummySender)
 
@@ -60,7 +60,7 @@ defmodule CheckTest do
     end
 
     test "not sending multiple notifications" do
-      %Check{url: "abc", notify_number: "+46123", failed_checks: 3}
+      %Check{url: "abc", notify_numbers: ["+46123"], failed_checks: 3}
       |> Check.maybe_send_notification(DummySender)
       |> Check.maybe_send_notification(DummySender)
       |> Check.maybe_send_notification(DummySender)

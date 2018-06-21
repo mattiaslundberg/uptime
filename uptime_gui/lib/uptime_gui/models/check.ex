@@ -51,7 +51,7 @@ defmodule UptimeGui.Check do
       {:ok, check} ->
         Uptime.add_new_check(
           check.url,
-          check.notify_number,
+          [check.notify_number],
           check.expected_code,
           Application.get_env(:uptime_gui, :elks_username),
           Application.get_env(:uptime_gui, :elks_key)

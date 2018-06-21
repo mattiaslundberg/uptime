@@ -5,7 +5,7 @@ defmodule Uptime.Check do
             elks_key: nil,
             check_interval: 5 * 60 * 1000,
             failed_checks: 0,
-            notify_number: nil,
+            notify_numbers: [],
             alert_sent: false,
             expected_code: 200
 
@@ -23,7 +23,10 @@ defmodule Uptime.Check do
 
   def maybe_send_notification(check = %__MODULE__{}, sender \\ Uptime.FourSixElksSender) do
     if check.failed_checks >= @required_fails and not check.alert_sent do
-      sender.send_message(get_message(check), check)
+      check
+      |> get_messages()
+      |> Enum.map(fn msg -> sender.send_message(msg, check) end)
+
       %{check | alert_sent: true}
     else
       check
@@ -39,10 +42,12 @@ defmodule Uptime.Check do
     ]
   end
 
-  defp get_message(%__MODULE__{notify_number: to, url: url, failed_checks: fail_no}) do
-    %Uptime.Message{
-      to: to,
-      msg: "Failed #{fail_no} checks for #{url}"
-    }
+  defp get_messages(%__MODULE__{notify_numbers: numbers, url: url, failed_checks: fail_no}) do
+    Enum.map(numbers, fn number ->
+      %Uptime.Message{
+        to: number,
+        msg: "Failed #{fail_no} checks for #{url}"
+      }
+    end)
   end
 end
