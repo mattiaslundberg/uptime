@@ -2,10 +2,11 @@ defmodule UptimeGui.UptimeGui.Contact do
   use Ecto.Schema
   import Ecto.Changeset
 
-
   schema "contacts" do
-    field :name, :string
-    field :number, :string
+    field(:name, :string)
+    field(:number, :string)
+
+    belongs_to(:user, UptimeGui.User)
 
     timestamps()
   end
