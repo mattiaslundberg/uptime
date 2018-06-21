@@ -3,8 +3,6 @@ defmodule UptimeGui.CheckTest do
 
   alias UptimeGui.Check
 
-  import Mock
-
   @valid_attrs %{
     url: "https://example.com",
     notify_number: "+461234567",
@@ -45,9 +43,37 @@ defmodule UptimeGui.CheckTest do
       {:ok, user: user}
     end
 
-    test "create with 2 contacts"
-    test "create with single contact"
-    test "create without contacts"
+    test "create with 2 contacts", %{user: user} do
+      {:ok, contact1} = insert_contact(user, number: "1")
+      {:ok, contact2} = insert_contact(user, number: "2")
+
+      {:ok, %Check{}, %Uptime.Check{pid: pid, url: url, notify_numbers: numbers}} =
+        Check.create(user, [contact1, contact2], Map.delete(@valid_attrs, :notify_number))
+
+      assert Process.alive?(pid)
+      assert url == "https://example.com"
+      assert numbers == ["1", "2"]
+    end
+
+    test "create with single contact", %{user: user} do
+      {:ok, contact} = insert_contact(user)
+
+      {:ok, %Check{}, %Uptime.Check{pid: pid, url: url, notify_numbers: numbers}} =
+        Check.create(user, [contact], Map.delete(@valid_attrs, :notify_number))
+
+      assert Process.alive?(pid)
+      assert url == "https://example.com"
+      assert numbers == ["+461234567"]
+    end
+
+    test "create without contacts", %{user: user} do
+      {:ok, %Check{}, %Uptime.Check{pid: pid, url: url, notify_numbers: numbers}} =
+        Check.create(user, [], Map.delete(@valid_attrs, :notify_number))
+
+      assert Process.alive?(pid)
+      assert url == "https://example.com"
+      assert numbers == []
+    end
 
     test "check with valid params", %{user: user} do
       {:ok, %Check{}, %Uptime.Check{pid: pid, url: url, notify_numbers: numbers}} =
