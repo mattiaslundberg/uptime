@@ -28,11 +28,6 @@ defmodule UptimeGui.CheckTest do
       refute changeset.valid?
     end
 
-    test "refutes empty number", %{check: check} do
-      changeset = Check.changeset(check, Map.put(@valid_attrs, :notify_number, ""))
-      refute changeset.valid?
-    end
-
     test "refutes empty code", %{check: check} do
       changeset = Check.changeset(check, Map.put(@valid_attrs, :expected_code, ""))
       refute changeset.valid?
