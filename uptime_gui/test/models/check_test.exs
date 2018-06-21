@@ -10,28 +10,34 @@ defmodule UptimeGui.CheckTest do
   }
 
   describe "validation" do
-    test "refutes empty url" do
-      changeset = Check.changeset(%Check{}, Map.put(@valid_attrs, :url, ""))
+    setup do
+      {:ok, user, _token} = insert_user()
+      check = build_assoc(user, :checks)
+      {:ok, check: check}
+    end
+
+    test "refutes empty url", %{check: check} do
+      changeset = Check.changeset(check, Map.put(@valid_attrs, :url, ""))
       refute changeset.valid?
     end
 
-    test "refutest non valid url" do
-      changeset = Check.changeset(%Check{}, Map.put(@valid_attrs, :url, "invalid"))
+    test "refutest non valid url", %{check: check} do
+      changeset = Check.changeset(check, Map.put(@valid_attrs, :url, "invalid"))
       refute changeset.valid?
     end
 
-    test "refutes empty number" do
-      changeset = Check.changeset(%Check{}, Map.put(@valid_attrs, :notify_number, ""))
+    test "refutes empty number", %{check: check} do
+      changeset = Check.changeset(check, Map.put(@valid_attrs, :notify_number, ""))
       refute changeset.valid?
     end
 
-    test "refutes empty code" do
-      changeset = Check.changeset(%Check{}, Map.put(@valid_attrs, :expected_code, ""))
+    test "refutes empty code", %{check: check} do
+      changeset = Check.changeset(check, Map.put(@valid_attrs, :expected_code, ""))
       refute changeset.valid?
     end
 
-    test "valid data" do
-      changeset = Check.changeset(%Check{}, @valid_attrs)
+    test "valid data", %{check: check} do
+      changeset = Check.changeset(check, @valid_attrs)
       assert changeset.valid?
     end
   end
