@@ -13,6 +13,17 @@ defmodule UptimeGui.Factories do
     |> Repo.insert()
   end
 
+  def insert_contact(user, opts \\ []) do
+    Contact.changeset(
+      Ecto.build_assoc(user, :contacts),
+      %{
+        name: Keyword.get(opts, :name, "My number"),
+        number: Keyword.get(opts, :number, "+461234567")
+      }
+    )
+    |> Repo.insert()
+  end
+
   def insert_user(opts \\ []) do
     password = Keyword.get(opts, :password, "password")
 
