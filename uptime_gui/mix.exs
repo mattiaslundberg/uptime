@@ -46,6 +46,7 @@ defmodule UptimeGui.Mixfile do
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 2.10"},
       {:phoenix_live_reload, "~> 1.0", only: :dev},
+      {:mock, "~> 0.3.0", only: :test},
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
       {:excoveralls, "~> 0.8", only: :test},
