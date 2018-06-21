@@ -1,4 +1,4 @@
-defmodule UptimeGui.UptimeGui.Contact do
+defmodule UptimeGui.Contact do
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -14,7 +14,7 @@ defmodule UptimeGui.UptimeGui.Contact do
   @doc false
   def changeset(contact, attrs) do
     contact
-    |> cast(attrs, [:name, :number])
-    |> validate_required([:name, :number])
+    |> cast(attrs, [:name, :number, :user_id])
+    |> validate_required([:name, :number, :user_id])
   end
 end

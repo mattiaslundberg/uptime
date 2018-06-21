@@ -11,6 +11,7 @@ defmodule UptimeGui.User do
     field(:password, :string)
 
     has_many(:checks, UptimeGui.Check)
+    has_many(:contacts, UptimeGui.Contact)
 
     timestamps()
   end
