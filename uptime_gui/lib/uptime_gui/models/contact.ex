@@ -8,6 +8,8 @@ defmodule UptimeGui.Contact do
 
     belongs_to(:user, UptimeGui.User)
 
+    many_to_many(:checks, UptimeGui.Check, join_through: "checks_contacts")
+
     timestamps()
   end
 
