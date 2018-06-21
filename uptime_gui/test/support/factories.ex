@@ -1,5 +1,5 @@
 defmodule UptimeGui.Factories do
-  alias UptimeGui.{Check, User, Repo}
+  alias UptimeGui.{Check, User, Repo, Contact}
 
   def insert_check(user, opts \\ []) do
     Check.changeset(
