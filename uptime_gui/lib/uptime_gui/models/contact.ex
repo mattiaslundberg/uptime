@@ -17,6 +17,7 @@ defmodule UptimeGui.Contact do
 
   def serialize(contact) do
     %{
+      "id" => contact.id,
       "name" => contact.name,
       "number" => contact.number
     }
