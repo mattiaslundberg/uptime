@@ -3,7 +3,7 @@ defmodule UptimeGuiWeb.CheckChannel do
 
   require Logger
 
-  alias UptimeGui.{Check, Repo, User}
+  alias UptimeGui.{Check, Repo, User, Contact}
 
   def join("checks:" <> user_id, payload, socket) do
     with true <- authorized?(user_id, payload),
@@ -28,14 +28,18 @@ defmodule UptimeGuiWeb.CheckChannel do
   end
 
   def handle_in("create_check", payload, socket) do
-    case Check.create(socket.assigns.user, payload) do
-      {:ok, check, _} ->
-        broadcast(socket, "create_check", Check.serialize(check))
+    with {:ok, contact} <-
+           Contact.create(socket.assigns.user, %{
+             "name" => "Auto",
+             "number" => payload["notify_number"]
+           }),
+         {:ok, check, _} <-
+           Check.create(socket.assigns.user, Map.delete(payload, "notify_number")) do
+      broadcast(socket, "create_check", Check.serialize(check))
 
-        {:reply,
-         {:ok, %{"status_msg" => "Successfully created new check", "check_id" => check.id}},
-         socket}
-
+      {:reply, {:ok, %{"status_msg" => "Successfully created new check", "check_id" => check.id}},
+       socket}
+    else
       {:error, changeset} ->
         {:reply,
          {:error,
