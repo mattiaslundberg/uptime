@@ -75,15 +75,6 @@ defmodule UptimeGui.CheckTest do
       assert numbers == []
     end
 
-    test "check with valid params", %{user: user} do
-      {:ok, %Check{}, %Uptime.Check{pid: pid, url: url, notify_numbers: numbers}} =
-        Check.create(user, @valid_attrs)
-
-      assert Process.alive?(pid)
-      assert url == "https://example.com"
-      assert numbers == ["+461234567"]
-    end
-
     test "create with invalid params", %{user: user} do
       {:error, _} = Check.create(user, Map.delete(@valid_attrs, :url))
     end

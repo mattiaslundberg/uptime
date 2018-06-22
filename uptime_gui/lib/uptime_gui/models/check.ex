@@ -5,7 +5,6 @@ defmodule UptimeGui.Check do
 
   schema "checks" do
     field(:url, :string)
-    field(:notify_number, :string)
     field(:expected_code, :integer)
 
     belongs_to(:user, UptimeGui.User)
@@ -20,7 +19,7 @@ defmodule UptimeGui.Check do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:url, :notify_number, :expected_code, :user_id])
+    |> cast(params, [:url, :expected_code, :user_id])
     |> validate_required([:url, :expected_code, :user_id])
     |> validate_format(:url, ~r/https?\:\/\/.*/, message: "Invalid format")
   end
@@ -41,7 +40,7 @@ defmodule UptimeGui.Check do
     %{
       "id" => c.id,
       "url" => c.url,
-      "notify_number" => c.notify_number,
+      "notify_number" => "",
       "expected_code" => c.expected_code
     }
   end
@@ -51,8 +50,7 @@ defmodule UptimeGui.Check do
 
     case Repo.insert(check_changeset) do
       {:ok, check} ->
-        numbers =
-          [check.notify_number | Enum.map(contacts, & &1.number)] |> Enum.reject(&is_nil/1)
+        numbers = Enum.map(contacts, & &1.number)
 
         pid =
           Uptime.add_new_check(
