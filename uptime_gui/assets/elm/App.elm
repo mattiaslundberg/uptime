@@ -2,6 +2,7 @@ module App exposing (..)
 
 import Ports exposing (..)
 import Contact
+import Bootstrap.Navbar as Navbar
 import Check
 import Login
 import CheckForm
@@ -32,14 +33,22 @@ type alias Flags =
     { url : String }
 
 
+type Page
+    = Checks
+    | Contacts
+    | About
+    | Login
+
+
 type alias Model =
     { connection : Maybe Connection
-    , authRequired : Bool
     , checks : List Check.Model
     , checkForm : CheckForm.Model
     , url : String
     , login : Login.Model
     , status : Status.Model
+    , navbar : Navbar.State
+    , page : Page
     }
 
 
@@ -65,22 +74,28 @@ type Msg
     | GotToken ConnData
     | PromptAuth Bool
     | Logout
+    | NavbarMsg Navbar.State
+    | PageMsg Page
 
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
     let
+        ( navbarState, navbarCmd ) =
+            Navbar.initialState NavbarMsg
+
         model =
             { connection = Nothing
-            , authRequired = False
             , checks = []
             , checkForm = CheckForm.init
             , url = flags.url
             , login = Login.init
             , status = Status.init
+            , navbar = navbarState
+            , page = Checks
             }
     in
-        ( model, getToken "" )
+        ( model, Cmd.batch [ getToken "", navbarCmd ] )
 
 
 initConnection : String -> ConnData -> ( Connection, Cmd Msg )
@@ -170,6 +185,9 @@ update msg model =
         Noop _ ->
             ( model, Cmd.none )
 
+        PageMsg p ->
+            ( { model | page = p }, Cmd.none )
+
         PhxMsg msg ->
             handlePhxMsg msg model
 
@@ -217,7 +235,7 @@ update msg model =
                 ( { model | connection = Just conn }, cmd )
 
         PromptAuth required ->
-            ( { model | authRequired = required }, Cmd.none )
+            ( { model | page = Login }, Cmd.none )
 
         CheckFormMsg msg ->
             case msg of
@@ -265,7 +283,7 @@ update msg model =
                             tokenCmd =
                                 setToken ( connData.token, toString connData.userId )
                         in
-                            ( { model | connection = Just conn, authRequired = False }, Cmd.batch [ connCmd, tokenCmd ] )
+                            ( { model | connection = Just conn, page = Checks }, Cmd.batch [ connCmd, tokenCmd ] )
 
                     Nothing ->
                         ( { model | login = loginModel }, Cmd.map LoginMsg loginCmd )
@@ -275,7 +293,7 @@ update msg model =
                 tokenCmd =
                     unsetToken ""
             in
-                ( { model | connection = Nothing, authRequired = True }, tokenCmd )
+                ( { model | connection = Nothing, page = Login }, tokenCmd )
 
         DeleteCheck checkId ->
             case model.connection of
@@ -291,6 +309,9 @@ update msg model =
 
                 Nothing ->
                     ( model, Cmd.none )
+
+        NavbarMsg state ->
+            ( { model | navbar = state }, Cmd.none )
 
         EditCheck checkId ->
             let
@@ -359,10 +380,7 @@ drawChecks model =
 drawAuthenticated : Model -> Html Msg
 drawAuthenticated model =
     div []
-        ([ a [ href "#", onClick Logout, class "d-flex justify-content-end" ] [ text "Logout" ]
-         , Grid.row [] [ Grid.col [] [ h1 [ class "text-center" ] [ text "Uptime" ] ] ]
-         , Grid.row [] [ Grid.col [] [ div [ class "text-center" ] [ text "Monitors uptime for selected sites and notifies by text in case of problems." ] ] ]
-         , Grid.row [] [ Grid.col [] [ h2 [ class "text-center" ] [ text "Active checks" ] ] ]
+        ([ Grid.row [] [ Grid.col [] [ h2 [ class "text-center" ] [ text "Active checks" ] ] ]
          , Grid.row [] [ Grid.col [] [ text " " ] ]
          ]
             ++ [ drawChecks model.checks ]
@@ -370,19 +388,68 @@ drawAuthenticated model =
         )
 
 
+navbarItem : Page -> Page -> Msg -> String -> Navbar.Item Msg
+navbarItem currentPage page event label =
+    let
+        fun =
+            if currentPage == page then
+                Navbar.itemLinkActive
+            else
+                Navbar.itemLink
+    in
+        fun [ href "#", onClick event ] [ text label ]
+
+
+viewNavbar : Model -> Html Msg
+viewNavbar model =
+    Navbar.config NavbarMsg
+        |> Navbar.withAnimation
+        |> Navbar.brand [ href "#" ] [ text "Uptime" ]
+        |> Navbar.items
+            [ navbarItem model.page Checks (PageMsg Checks) "Active checks"
+            , navbarItem model.page Contacts (PageMsg Contacts) "Contacts"
+            , navbarItem model.page About (PageMsg About) "About"
+            , Navbar.itemLink [ href "#", onClick Logout, class "d-flex justify-content-end" ] [ text "Logout" ]
+            ]
+        |> Navbar.view model.navbar
+
+
+statusView : Model -> Html Msg
+statusView model =
+    Html.map StatusMsg (Status.view model.status)
+
+
 view : Model -> Html Msg
 view model =
-    let
-        main =
-            if model.authRequired then
-                Html.map LoginMsg (Login.view model.login)
-            else
-                drawAuthenticated model
-    in
-        div []
-            [ CDN.stylesheet
-            , Grid.container [] [ Html.map StatusMsg (Status.view model.status), main ]
-            ]
+    case model.page of
+        Login ->
+            div []
+                [ CDN.stylesheet
+                , statusView model
+                , Grid.container [] [ Html.map LoginMsg (Login.view model.login) ]
+                ]
+
+        Checks ->
+            div []
+                [ CDN.stylesheet
+                , Grid.container
+                    []
+                    [ viewNavbar model
+                    , statusView model
+                    , drawAuthenticated model
+                    ]
+                ]
+
+        Contacts ->
+            div []
+                [ CDN.stylesheet
+                , Grid.container
+                    []
+                    [ viewNavbar model, statusView model, text "Contact list" ]
+                ]
+
+        About ->
+            div [] [ CDN.stylesheet, Grid.container [] [ viewNavbar model, statusView model, text "About" ] ]
 
 
 subscriptions : Model -> Sub Msg
@@ -393,12 +460,14 @@ subscriptions model =
                 [ Phoenix.Socket.listen conn.socket PhxMsg
                 , jsGetToken GotToken
                 , jsPromptAuth PromptAuth
+                , Navbar.subscriptions model.navbar NavbarMsg
                 ]
 
         Nothing ->
             Sub.batch
                 [ jsGetToken GotToken
                 , jsPromptAuth PromptAuth
+                , Navbar.subscriptions model.navbar NavbarMsg
                 ]
 
 
