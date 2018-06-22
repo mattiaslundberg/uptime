@@ -99,10 +99,13 @@ defmodule UptimeGui.CheckTest do
     test "not getting other users" do
       {:ok, user, _token} = insert_user()
       {:ok, other_user, _token} = insert_user(email: "other@example.com")
-      expected = Check.changeset(build_assoc(user, :checks), @valid_attrs) |> Repo.insert!()
+
+      %Check{id: expected} =
+        Check.changeset(build_assoc(user, :checks), @valid_attrs) |> Repo.insert!()
+
       Check.changeset(build_assoc(other_user, :checks), @valid_attrs) |> Repo.insert!()
 
-      [^expected] = Check.get_all(user.id)
+      [%Check{id: ^expected}] = Check.get_all(user.id)
     end
 
     test "get empty set" do

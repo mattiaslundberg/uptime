@@ -28,19 +28,21 @@ defmodule UptimeGui.Check do
     __MODULE__
     |> where([c], c.user_id == ^user_id)
     |> Repo.all()
+    |> Repo.preload(:contacts)
   end
 
   def get(user_id, check_id) do
     __MODULE__
     |> where([c], c.user_id == ^user_id and c.id == ^check_id)
     |> Repo.one()
+    |> Repo.preload(:contacts)
   end
 
   def serialize(c = %__MODULE__{}) do
     %{
       "id" => c.id,
       "url" => c.url,
-      "notify_number" => "",
+      "contacts" => Enum.map(c.contacts, &UptimeGui.Contact.serialize/1),
       "expected_code" => c.expected_code
     }
   end
@@ -60,6 +62,8 @@ defmodule UptimeGui.Check do
             Application.get_env(:uptime_gui, :elks_username),
             Application.get_env(:uptime_gui, :elks_key)
           )
+
+        check = Repo.get(__MODULE__, check.id) |> Repo.preload(:contacts)
 
         {:ok, check, pid}
 

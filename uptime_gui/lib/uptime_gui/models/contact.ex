@@ -15,6 +15,13 @@ defmodule UptimeGui.Contact do
     timestamps()
   end
 
+  def serialize(contact) do
+    %{
+      "name" => contact.name,
+      "number" => contact.number
+    }
+  end
+
   @doc false
   def changeset(contact, attrs) do
     contact
