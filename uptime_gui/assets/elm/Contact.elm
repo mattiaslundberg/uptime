@@ -19,12 +19,12 @@ decoder =
         (field "number" Json.Decode.string)
 
 
-viewList : List Model -> Html ()
-viewList models =
+viewNames : List Model -> Html ()
+viewNames models =
     div []
-        (List.map (\m -> view m) models)
+        (List.map (\m -> viewName m) models)
 
 
-view : Model -> Html ()
-view model =
+viewName : Model -> Html ()
+viewName model =
     div [] [ text model.name ]

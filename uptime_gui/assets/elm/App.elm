@@ -347,7 +347,7 @@ drawCheck : Check.Model -> Table.Row Msg
 drawCheck check =
     Table.tr []
         [ Table.td [] [ text check.url ]
-        , Table.td [] [ Html.map Noop (Contact.viewList check.contacts) ]
+        , Table.td [] [ Html.map Noop (Contact.viewNames check.contacts) ]
         , Table.td [] [ text (toString check.expectedCode) ]
         , Table.td []
             [ ButtonGroup.buttonGroup []
