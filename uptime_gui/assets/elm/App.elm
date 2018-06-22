@@ -321,7 +321,7 @@ drawCheck : Check.Model -> Table.Row Msg
 drawCheck check =
     Table.tr []
         [ Table.td [] [ text check.url ]
-        , Table.td [] [ text check.notifyNumber ]
+        , Table.td [] [ text (toString check.contacts) ]
         , Table.td [] [ text (toString check.expectedCode) ]
         , Table.td []
             [ ButtonGroup.buttonGroup []

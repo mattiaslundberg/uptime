@@ -170,7 +170,7 @@ fromCheck : Check.Model -> Model
 fromCheck check =
     { id = check.id
     , url = check.url
-    , notifyNumber = check.notifyNumber
+    , notifyNumber = toString check.contacts
     , expectedCode = check.expectedCode
     , errors = Dict.empty
     }
@@ -180,6 +180,6 @@ toCheck : Model -> Check.Model
 toCheck model =
     { id = model.id
     , url = model.url
-    , notifyNumber = model.notifyNumber
+    , contacts = []
     , expectedCode = model.expectedCode
     }
