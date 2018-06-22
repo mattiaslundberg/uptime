@@ -377,15 +377,12 @@ drawChecks model =
         )
 
 
-drawAuthenticated : Model -> Html Msg
-drawAuthenticated model =
+drawCheckList : Model -> Html Msg
+drawCheckList model =
     div []
-        ([ Grid.row [] [ Grid.col [] [ h2 [ class "text-center" ] [ text "Active checks" ] ] ]
-         , Grid.row [] [ Grid.col [] [ text " " ] ]
-         ]
-            ++ [ drawChecks model.checks ]
-            ++ [ Html.map CheckFormMsg (CheckForm.view model.checkForm) ]
-        )
+        [ drawChecks model.checks
+        , Html.map CheckFormMsg (CheckForm.view model.checkForm)
+        ]
 
 
 navbarItem : Page -> Page -> Msg -> String -> Navbar.Item Msg
@@ -436,7 +433,7 @@ view model =
                     []
                     [ viewNavbar model
                     , statusView model
-                    , drawAuthenticated model
+                    , drawCheckList model
                     ]
                 ]
 
