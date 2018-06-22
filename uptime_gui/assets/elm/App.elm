@@ -1,6 +1,7 @@
 module App exposing (..)
 
 import Ports exposing (..)
+import Contact
 import Check
 import Login
 import CheckForm
@@ -50,7 +51,8 @@ type alias Connection =
 
 
 type Msg
-    = PhxMsg (Phoenix.Socket.Msg Msg)
+    = Noop ()
+    | PhxMsg (Phoenix.Socket.Msg Msg)
     | PhxPushError Json.Encode.Value
     | PhxAddCheck Json.Encode.Value
     | PhxDeleteCheck Json.Encode.Value
@@ -165,6 +167,9 @@ handlePushOk raw =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        Noop _ ->
+            ( model, Cmd.none )
+
         PhxMsg msg ->
             handlePhxMsg msg model
 
@@ -321,7 +326,7 @@ drawCheck : Check.Model -> Table.Row Msg
 drawCheck check =
     Table.tr []
         [ Table.td [] [ text check.url ]
-        , Table.td [] [ text (toString check.contacts) ]
+        , Table.td [] [ Html.map Noop (Contact.viewList check.contacts) ]
         , Table.td [] [ text (toString check.expectedCode) ]
         , Table.td []
             [ ButtonGroup.buttonGroup []
