@@ -1,10 +1,12 @@
 module CheckForm exposing (..)
 
+import Contact
 import Dict
 import Check
 import Json.Encode
 import Json.Decode exposing (field)
 import Bootstrap.Grid as Grid
+import Bootstrap.Form.Select as Select
 import Html.Events exposing (onSubmit, onInput, onClick)
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form as Form
@@ -21,7 +23,7 @@ type alias Errors =
 type alias Model =
     { id : Int
     , url : String
-    , notifyNumber : String
+    , contacts : List Int
     , expectedCode : Int
     , errors : Dict.Dict String String
     }
@@ -29,7 +31,7 @@ type alias Model =
 
 type Msg
     = SetUrl String
-    | SetNumber String
+    | AddContact String
     | SetResponse String
     | Submit
 
@@ -38,7 +40,7 @@ init : Model
 init =
     { id = 0
     , url = ""
-    , notifyNumber = ""
+    , contacts = []
     , expectedCode = 200
     , errors = Dict.empty
     }
@@ -55,9 +57,16 @@ submitCmd model =
 serializer : Model -> List ( String, Json.Encode.Value )
 serializer model =
     if model.id == 0 then
-        [ ( "url", Json.Encode.string model.url ), ( "notify_number", Json.Encode.string model.notifyNumber ), ( "expected_code", Json.Encode.int model.expectedCode ) ]
+        [ ( "url", Json.Encode.string model.url )
+        , ( "contacts", Json.Encode.list (List.map Json.Encode.int model.contacts) )
+        , ( "expected_code", Json.Encode.int model.expectedCode )
+        ]
     else
-        [ ( "id", Json.Encode.int model.id ), ( "url", Json.Encode.string model.url ), ( "notify_number", Json.Encode.string model.notifyNumber ), ( "expected_code", Json.Encode.int model.expectedCode ) ]
+        [ ( "id", Json.Encode.int model.id )
+        , ( "url", Json.Encode.string model.url )
+        , ( "contacts", Json.Encode.list (List.map Json.Encode.int model.contacts) )
+        , ( "expected_code", Json.Encode.int model.expectedCode )
+        ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -66,8 +75,13 @@ update msg model =
         SetUrl str ->
             ( { model | url = str }, Cmd.none )
 
-        SetNumber str ->
-            ( { model | notifyNumber = str }, Cmd.none )
+        AddContact str ->
+            case String.toInt str of
+                Ok new ->
+                    ( { model | contacts = new :: model.contacts }, Cmd.none )
+
+                Err _ ->
+                    ( model, Cmd.none )
 
         SetResponse str ->
             let
@@ -80,13 +94,13 @@ update msg model =
             ( model, Cmd.none )
 
 
-view : Model -> Html Msg
-view model =
+view : List Contact.Model -> Model -> Html Msg
+view contacts model =
     div []
         [ drawEditMessage model
         , Form.form [ onSubmit Submit ]
             [ Form.group [] (viewUrl model)
-            , Form.group [] (viewNo model)
+            , Form.group [] (viewContacts contacts model)
             , Form.group [] (viewCode model)
             , Button.button [ Button.attrs [ type_ "submit" ] ] [ text "Save" ]
             ]
@@ -108,19 +122,27 @@ viewUrl model =
         ]
 
 
-viewNo : Model -> List (Html Msg)
-viewNo model =
+viewContacts : List Contact.Model -> Model -> List (Html Msg)
+viewContacts contacts model =
     let
-        extraAttrs =
-            if Dict.member "notify_number" model.errors then
-                [ Input.danger ]
+        ( feedback, extraAttrs ) =
+            if Dict.member "contacts" model.errors then
+                ( Maybe.withDefault "" (Dict.get "contacts" model.errors), [ Select.danger ] )
             else
-                []
+                ( "", [] )
     in
-        [ Form.label [ for "notify_no" ] [ text "Notify number" ]
-        , Input.text (extraAttrs ++ [ Input.id "notify_no", Input.attrs [ value model.notifyNumber, onInput SetNumber ] ])
-        , Form.invalidFeedback [] [ text (Maybe.withDefault "" (Dict.get "notify_number" model.errors)) ]
+        [ Form.label [ for "contacts" ] [ text "Contacts" ]
+        , Select.select (extraAttrs ++ [ Select.id "contacts", Select.onChange AddContact ])
+            (viewSelectContact contacts model)
+        , Form.invalidFeedback [] [ text feedback ]
         ]
+
+
+viewSelectContact : List Contact.Model -> Model -> List (Select.Item Msg)
+viewSelectContact contacts model =
+    List.map
+        (\c -> Select.item [] [ text c.name ])
+        contacts
 
 
 viewCode : Model -> List (Html Msg)
@@ -170,7 +192,7 @@ fromCheck : Check.Model -> Model
 fromCheck check =
     { id = check.id
     , url = check.url
-    , notifyNumber = toString check.contacts
+    , contacts = []
     , expectedCode = check.expectedCode
     , errors = Dict.empty
     }

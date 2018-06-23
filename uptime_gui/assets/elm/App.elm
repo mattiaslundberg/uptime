@@ -395,7 +395,7 @@ drawCheckList : Model -> Html Msg
 drawCheckList model =
     div []
         [ drawChecks model.checks
-        , Html.map CheckFormMsg (CheckForm.view model.checkForm)
+        , Html.map CheckFormMsg (CheckForm.view model.contacts model.checkForm)
         ]
 
 
