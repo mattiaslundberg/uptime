@@ -23,7 +23,8 @@ type alias Errors =
 type alias Model =
     { id : Int
     , url : String
-    , contacts : List Int
+    , contacts : List Contact.Model
+    , allContacts : List Contact.Model
     , expectedCode : Int
     , errors : Dict.Dict String String
     }
@@ -41,6 +42,7 @@ init =
     { id = 0
     , url = ""
     , contacts = []
+    , allContacts = []
     , expectedCode = 200
     , errors = Dict.empty
     }
@@ -65,7 +67,7 @@ serializer model =
     in
         extraFields
             ++ [ ( "url", Json.Encode.string model.url )
-               , ( "contacts", Json.Encode.list (List.map Json.Encode.int model.contacts) )
+               , ( "contacts", Json.Encode.list (List.map (\c -> Json.Encode.int c.id) model.contacts) )
                , ( "expected_code", Json.Encode.int model.expectedCode )
                ]
 
@@ -79,7 +81,7 @@ update msg model =
         AddContact str ->
             case String.toInt str of
                 Ok new ->
-                    ( { model | contacts = new :: model.contacts }, Cmd.none )
+                    ( { model | contacts = (List.filter (\c -> c.id == new) model.allContacts) ++ model.contacts }, Cmd.none )
 
                 Err _ ->
                     ( model, Cmd.none )
@@ -95,13 +97,13 @@ update msg model =
             ( model, Cmd.none )
 
 
-view : List Contact.Model -> Model -> Html Msg
-view contacts model =
+view : Model -> Html Msg
+view model =
     div []
         [ drawEditMessage model
         , Form.form [ onSubmit Submit ]
             [ Form.group [] (viewUrl model)
-            , Form.group [] (viewContacts contacts model)
+            , Form.group [] (viewContacts model)
             , Form.group [] (viewCode model)
             , Button.button [ Button.attrs [ type_ "submit" ] ] [ text "Save" ]
             ]
@@ -123,8 +125,8 @@ viewUrl model =
         ]
 
 
-viewContacts : List Contact.Model -> Model -> List (Html Msg)
-viewContacts contacts model =
+viewContacts : Model -> List (Html Msg)
+viewContacts model =
     let
         ( feedback, extraAttrs ) =
             if Dict.member "contacts" model.errors then
@@ -133,17 +135,19 @@ viewContacts contacts model =
                 ( "", [] )
     in
         [ Form.label [ for "contacts" ] [ text "Contacts" ]
+        , ul []
+            (List.map (\c -> li [] [ text c.name ]) model.contacts)
         , Select.select (extraAttrs ++ [ Select.id "contacts", Select.onChange AddContact ])
-            (viewSelectContact contacts model)
+            (viewSelectContact model)
         , Form.invalidFeedback [] [ text feedback ]
         ]
 
 
-viewSelectContact : List Contact.Model -> Model -> List (Select.Item Msg)
-viewSelectContact contacts model =
+viewSelectContact : Model -> List (Select.Item Msg)
+viewSelectContact model =
     List.map
         (\c -> Select.item [ value (toString c.id) ] [ text c.name ])
-        contacts
+        model.allContacts
 
 
 viewCode : Model -> List (Html Msg)
@@ -194,6 +198,7 @@ fromCheck check =
     { id = check.id
     , url = check.url
     , contacts = []
+    , allContacts = []
     , expectedCode = check.expectedCode
     , errors = Dict.empty
     }

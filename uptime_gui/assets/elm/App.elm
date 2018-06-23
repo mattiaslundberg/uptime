@@ -208,9 +208,16 @@ update msg model =
         PhxAddContact raw ->
             case Json.Decode.decodeValue Contact.decoder raw of
                 Ok contact ->
-                    ( { model | contacts = contact :: model.contacts }
-                    , Cmd.none
-                    )
+                    let
+                        checkForm =
+                            model.checkForm
+
+                        contacts =
+                            contact :: model.contacts
+                    in
+                        ( { model | contacts = contacts, checkForm = { checkForm | allContacts = contacts } }
+                        , Cmd.none
+                        )
 
                 Err error ->
                     handlePhxError error model
@@ -395,7 +402,7 @@ drawCheckList : Model -> Html Msg
 drawCheckList model =
     div []
         [ drawChecks model.checks
-        , Html.map CheckFormMsg (CheckForm.view model.contacts model.checkForm)
+        , Html.map CheckFormMsg (CheckForm.view model.checkForm)
         ]
 
 
