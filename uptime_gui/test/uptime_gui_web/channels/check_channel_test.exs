@@ -48,6 +48,21 @@ defmodule UptimeGuiWeb.CheckChannelTest do
       assert length(check.contacts) == 1
     end
 
+    test "create check with contact owned by other user", %{socket: socket} do
+      {:ok, other_user, _token} = insert_user(email: "other@example.com")
+      {:ok, contact} = insert_contact(other_user)
+
+      ref = push(socket, "create_check", Map.put(@valid_attrs, "contacts", [contact.id]))
+      :timer.sleep(100)
+
+      assert [] == Repo.all(Check)
+
+      assert_reply(ref, :error, %{
+        "status_msg" => "Something went wrong when creating check",
+        "errors" => %{"contacts" => "Invalid choice"}
+      })
+    end
+
     test "create check with invalid parameters", %{socket: socket} do
       invalid_attrs = Map.put(@valid_attrs, "url", "invalid")
       ref = push(socket, "create_check", invalid_attrs)

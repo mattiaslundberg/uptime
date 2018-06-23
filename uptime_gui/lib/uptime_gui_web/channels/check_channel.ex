@@ -29,11 +29,10 @@ defmodule UptimeGuiWeb.CheckChannel do
   end
 
   def handle_in("create_check", payload, socket) do
-    contact_ids = Map.get(payload, "contacts", [])
+    contact_ids = payload |> Map.get("contacts", []) |> Enum.uniq()
 
-    # TODO: Handle errors better
-    with contacts when length(contacts) == length(contact_ids) <-
-           Contact.get_list(socket.assigns.user.id, contact_ids),
+    with {:contacts, contacts} when length(contacts) == length(contact_ids) <-
+           {:contacts, Contact.get_list(socket.assigns.user.id, contact_ids)},
          {:ok, check, _} <-
            Check.create(socket.assigns.user, contacts, Map.delete(payload, "notify_number")) do
       broadcast(socket, "create_check", Check.serialize(check))
@@ -42,12 +41,18 @@ defmodule UptimeGuiWeb.CheckChannel do
        socket}
     else
       {:error, changeset} ->
-        {:reply,
-         {:error,
-          %{
-            "status_msg" => "Something went wrong when creating check",
-            "errors" => errors_from_changeset(changeset)
-          }}, socket}
+        send_error_reply(
+          "Something went wrong when creating check",
+          errors_from_changeset(changeset),
+          socket
+        )
+
+      {:contacts, _} ->
+        send_error_reply(
+          "Something went wrong when creating check",
+          %{"contacts" => "Invalid choice"},
+          socket
+        )
     end
   end
 
@@ -60,16 +65,14 @@ defmodule UptimeGuiWeb.CheckChannel do
       {:reply, {:ok, %{"status_msg" => "Successfully updated check", "check_id" => id}}, socket}
     else
       {:error, changeset} ->
-        {:reply,
-         {:error,
-          %{
-            "status_msg" => "Something went wrong when updating check",
-            "errors" => errors_from_changeset(changeset)
-          }}, socket}
+        send_error_reply(
+          "Something went wrong when updating check",
+          errors_from_changeset(changeset),
+          socket
+        )
 
       nil ->
-        {:reply, {:error, %{"status_msg" => "Cannot update non existing check", "errors" => %{}}},
-         socket}
+        send_error_reply("Cannot update non existing check", %{}, socket)
     end
   end
 
@@ -81,9 +84,17 @@ defmodule UptimeGuiWeb.CheckChannel do
       {:reply, {:ok, %{"status_msg" => "Successfully removed check", "check_id" => id}}, socket}
     else
       nil ->
-        {:reply, {:error, %{"status_msg" => "Cannot remove non existing check", "errors" => %{}}},
-         socket}
+        send_error_reply("Cannot remove non existing check", %{}, socket)
     end
+  end
+
+  defp send_error_reply(status_msg, errors, socket) do
+    {:reply,
+     {:error,
+      %{
+        "status_msg" => status_msg,
+        "errors" => errors
+      }}, socket}
   end
 
   defp errors_from_changeset(%{errors: errors}) do
