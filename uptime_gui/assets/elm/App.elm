@@ -366,7 +366,7 @@ drawChecks model =
     Table.simpleTable
         ( Table.simpleThead
             [ Table.th [] [ text "Url" ]
-            , Table.th [] [ text "Notify number" ]
+            , Table.th [] [ text "Contacts" ]
             , Table.th [] [ text "Expected response" ]
             , Table.th [] [ text "Actions" ]
             ]
