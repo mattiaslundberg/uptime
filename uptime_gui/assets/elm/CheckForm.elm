@@ -56,17 +56,18 @@ submitCmd model =
 
 serializer : Model -> List ( String, Json.Encode.Value )
 serializer model =
-    if model.id == 0 then
-        [ ( "url", Json.Encode.string model.url )
-        , ( "contacts", Json.Encode.list (List.map Json.Encode.int model.contacts) )
-        , ( "expected_code", Json.Encode.int model.expectedCode )
-        ]
-    else
-        [ ( "id", Json.Encode.int model.id )
-        , ( "url", Json.Encode.string model.url )
-        , ( "contacts", Json.Encode.list (List.map Json.Encode.int model.contacts) )
-        , ( "expected_code", Json.Encode.int model.expectedCode )
-        ]
+    let
+        extraFields =
+            if model.id == 0 then
+                []
+            else
+                [ ( "id", Json.Encode.int model.id ) ]
+    in
+        extraFields
+            ++ [ ( "url", Json.Encode.string model.url )
+               , ( "contacts", Json.Encode.list (List.map Json.Encode.int model.contacts) )
+               , ( "expected_code", Json.Encode.int model.expectedCode )
+               ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
