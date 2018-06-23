@@ -28,11 +28,7 @@ defmodule UptimeGuiWeb.CheckChannel do
   end
 
   def handle_in("create_check", payload, socket) do
-    with {:ok, contact} <-
-           Contact.create(socket.assigns.user, %{
-             "name" => "Auto",
-             "number" => payload["notify_number"]
-           }),
+    with contacts <- Contact.get_list(socket.assigns.user.id, Map.get(payload, "contacts", [])),
          {:ok, check, _} <-
            Check.create(socket.assigns.user, Map.delete(payload, "notify_number")) do
       broadcast(socket, "create_check", Check.serialize(check))

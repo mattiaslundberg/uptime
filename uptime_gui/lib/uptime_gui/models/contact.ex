@@ -1,5 +1,5 @@
 defmodule UptimeGui.Contact do
-  use Ecto.Schema
+  use UptimeGuiWeb, :schema
   import Ecto.Changeset
 
   alias UptimeGui.Repo
@@ -35,5 +35,11 @@ defmodule UptimeGui.Contact do
     |> Ecto.build_assoc(:contacts)
     |> changeset(params)
     |> Repo.insert()
+  end
+
+  def get_list(user_id, ids) do
+    __MODULE__
+    |> where([c], c.user_id == ^user_id and c.id in ^ids)
+    |> Repo.all()
   end
 end
