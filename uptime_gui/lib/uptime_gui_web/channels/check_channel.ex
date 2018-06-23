@@ -20,9 +20,10 @@ defmodule UptimeGuiWeb.CheckChannel do
 
   def handle_info(:after_join, socket) do
     Check.get_all(socket.assigns.user.id)
-    |> Enum.map(fn c ->
-      push(socket, "create_check", UptimeGui.Check.serialize(c))
-    end)
+    |> Enum.map(&push(socket, "create_check", Check.serialize(&1)))
+
+    Contact.get_all(socket.assigns.user.id)
+    |> Enum.map(&push(socket, "create_contact", Contact.serialize(&1)))
 
     {:noreply, socket}
   end

@@ -42,4 +42,10 @@ defmodule UptimeGui.Contact do
     |> where([c], c.user_id == ^user_id and c.id in ^ids)
     |> Repo.all()
   end
+
+  def get_all(user_id) do
+    __MODULE__
+    |> where([c], c.user_id == ^user_id)
+    |> Repo.all()
+  end
 end
