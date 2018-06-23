@@ -6,7 +6,7 @@ defmodule UptimeGuiWeb.CheckChannelTest do
 
   @valid_attrs %{
     "url" => "https://example.com",
-    "notify_number" => "+461234567",
+    "contacts" => [],
     "expected_code" => 200
   }
 
@@ -33,16 +33,19 @@ defmodule UptimeGuiWeb.CheckChannelTest do
       {:ok, socket: socket, user: user}
     end
 
-    test "create check with valid parameters", %{socket: socket} do
-      ref = push(socket, "create_check", @valid_attrs)
+    test "create check with valid parameters", %{socket: socket, user: user} do
+      {:ok, contact} = insert_contact(user)
+      ref = push(socket, "create_check", Map.put(@valid_attrs, "contacts", [contact.id]))
       :timer.sleep(100)
 
-      [%Check{id: check_id}] = Repo.all(Check)
+      [check = %Check{id: check_id}] = Repo.all(Check) |> Repo.preload(:contacts)
 
       assert_reply(ref, :ok, %{
         "status_msg" => "Successfully created new check",
         "check_id" => ^check_id
       })
+
+      assert length(check.contacts) == 1
     end
 
     test "create check with invalid parameters", %{socket: socket} do
