@@ -138,16 +138,21 @@ viewContacts model =
         , ul []
             (List.map (\c -> li [] [ text c.name ]) model.contacts)
         , Select.select (extraAttrs ++ [ Select.id "contacts", Select.onChange AddContact ])
-            (viewSelectContact model)
+            (Select.item
+                []
+                [ text "Add contact" ]
+                :: (viewSelectContact model)
+            )
         , Form.invalidFeedback [] [ text feedback ]
         ]
 
 
 viewSelectContact : Model -> List (Select.Item Msg)
 viewSelectContact model =
-    List.map
-        (\c -> Select.item [ value (toString c.id) ] [ text c.name ])
-        model.allContacts
+    model.allContacts
+        |> List.filter (\c -> not (List.any (\a -> a.id == c.id) model.contacts))
+        |> List.map
+            (\c -> Select.item [ value (toString c.id) ] [ text c.name ])
 
 
 viewCode : Model -> List (Html Msg)
