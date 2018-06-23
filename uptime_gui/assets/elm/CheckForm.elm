@@ -142,7 +142,7 @@ viewContacts contacts model =
 viewSelectContact : List Contact.Model -> Model -> List (Select.Item Msg)
 viewSelectContact contacts model =
     List.map
-        (\c -> Select.item [] [ text c.name ])
+        (\c -> Select.item [ value (toString c.id) ] [ text c.name ])
         contacts
 
 
