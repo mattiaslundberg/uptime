@@ -49,6 +49,7 @@ type alias Model =
     , status : Status.Model
     , navbar : Navbar.State
     , page : Page
+    , contacts : List Contact.Model
     }
 
 
@@ -92,6 +93,7 @@ init flags =
             , login = Login.init
             , status = Status.init
             , navbar = navbarState
+            , contacts = []
             , page = Checks
             }
     in
@@ -442,7 +444,7 @@ view model =
                 [ CDN.stylesheet
                 , Grid.container
                     []
-                    [ viewNavbar model, statusView model, text "Contact list" ]
+                    [ viewNavbar model, statusView model, Html.map Noop (Contact.drawList model.contacts) ]
                 ]
 
         About ->
