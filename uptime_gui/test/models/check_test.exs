@@ -47,23 +47,26 @@ defmodule UptimeGui.CheckTest do
       {:ok, contact1} = insert_contact(user, number: "1")
       {:ok, contact2} = insert_contact(user, number: "2")
 
-      {:ok, %Check{}, %Uptime.Check{pid: pid, url: url, notify_numbers: numbers}} =
+      {:ok, c = %Check{}, %Uptime.Check{pid: pid, url: url, notify_numbers: numbers}} =
         Check.create(user, [contact1, contact2], Map.delete(@valid_attrs, :notify_number))
 
       assert Process.alive?(pid)
       assert url == "https://example.com"
       assert numbers == ["1", "2"]
+
+      assert length(c.contacts) == 2
     end
 
     test "create with single contact", %{user: user} do
       {:ok, contact} = insert_contact(user)
 
-      {:ok, %Check{}, %Uptime.Check{pid: pid, url: url, notify_numbers: numbers}} =
+      {:ok, c = %Check{}, %Uptime.Check{pid: pid, url: url, notify_numbers: numbers}} =
         Check.create(user, [contact], Map.delete(@valid_attrs, :notify_number))
 
       assert Process.alive?(pid)
       assert url == "https://example.com"
       assert numbers == ["+461234567"]
+      assert length(c.contacts) == 1
     end
 
     test "create without contacts", %{user: user} do

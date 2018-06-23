@@ -48,7 +48,10 @@ defmodule UptimeGui.Check do
   end
 
   def create(user, contacts \\ [], params) do
-    check_changeset = build_assoc(user, :checks) |> changeset(params)
+    check_changeset =
+      build_assoc(user, :checks)
+      |> changeset(params)
+      |> put_assoc(:contacts, contacts)
 
     case Repo.insert(check_changeset) do
       {:ok, check} ->
