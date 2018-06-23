@@ -64,6 +64,7 @@ type Msg
     = Noop ()
     | PhxMsg (Phoenix.Socket.Msg Msg)
     | PhxPushError Json.Encode.Value
+    | PhxAddContact Json.Encode.Value
     | PhxAddCheck Json.Encode.Value
     | PhxDeleteCheck Json.Encode.Value
     | PhxUpdateCheck Json.Encode.Value
@@ -119,6 +120,7 @@ initConnection url connData =
                 |> Phoenix.Socket.on "create_check" (channelName userId) PhxAddCheck
                 |> Phoenix.Socket.on "remove_check" (channelName userId) PhxDeleteCheck
                 |> Phoenix.Socket.on "update_check" (channelName userId) PhxUpdateCheck
+                |> Phoenix.Socket.on "create_contact" (channelName userId) PhxAddContact
                 |> Phoenix.Socket.join channel
     in
         ( { socket = initSocket, token = token, userId = userId }, Cmd.map PhxMsg cmd )
@@ -202,6 +204,16 @@ update msg model =
                     CheckForm.handlePushError model.checkForm raw
             in
                 ( { model | status = statusModel, checkForm = formModel }, Cmd.none )
+
+        PhxAddContact raw ->
+            case Json.Decode.decodeValue Contact.decoder raw of
+                Ok contact ->
+                    ( { model | contacts = contact :: model.contacts }
+                    , Cmd.none
+                    )
+
+                Err error ->
+                    handlePhxError error model
 
         PhxAddCheck raw ->
             case Json.Decode.decodeValue Check.decoder raw of
